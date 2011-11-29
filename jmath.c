@@ -1,6 +1,8 @@
 #include "jmath.h"
 #include <math.h>
+#include <limits.h>
 #include <errno.h>
+#include <stdlib.h>
 
 long long fibonacci(int n)
 {
@@ -33,4 +35,86 @@ long long fibonacci(int n)
 	}
 
 	return x_n;
+}
+
+int gcd(int a, int b)
+{
+	if (a == 0 || b == 0) {
+		return -EDOM;
+	}
+
+	int m; // modulo
+	int n = a; // previous modulo, at the end of the algorithm gcd
+	while ((m = a % b) != 0) {
+		a = b;
+		b = n = m;
+	}
+
+	if (n < 0) {
+		// gcd() is always positive
+		n *= -1;
+	}
+
+	return n;
+}
+
+int chinese_remainder(const int *a, const int *m, int neq)
+{
+	if (a == NULL || m == NULL || neq < 1) {
+		return -EINVAL;
+	}
+
+	// check that m[0]..m[neq-1] are pairwise relative prime
+	int i;
+	for (i = 0; i < neq-1; i++){
+		if (gcd(m[i], m[i+1]) != 1) {
+			return -EDOM;
+		}
+	}
+
+	int sm = 1; // solution modulo
+	int *M = NULL; // moduli product except m[i]
+	int *y = NULL; // factor to M[i] making y[i]M[i] inverse modulo to m[i] 
+	int res = 0; // the result, a number (0 \le res < sm) that solves the whole equation system, all other solutions are congruent with x
+
+	if ((M = (int *)malloc(sizeof(int)*neq)) == NULL
+		|| (y = (int *)malloc(sizeof(int)*neq)) == NULL) {
+		res = -errno;
+		goto error;
+	}
+
+	for (i = 0; i < neq; i++) {
+		sm *= m[i];
+	}
+
+	for (i = 0; i < neq; i++) {
+		M[i] = sm / m[i];
+	}
+
+	for (i = 0; i < neq; i++) {
+		int j = 0;
+		while(++j < INT_MAX) {
+			if ((M[i]*j) % m[i] == 1) {
+				y[i] = j;
+				break;
+			} else if ((M[i]*-j) % m[i] == 1) {
+				y[i] = -j;
+				break;
+			}
+		}
+	}
+
+	for (i = 0; i < neq; i++) {
+		res += M[i]*a[i]*y[i];
+	}
+	res %= sm;
+	if (res < 0) {
+		res += sm;
+	}
+
+error_with_cleanup:
+	free(M);
+	free(y);
+error:
+	return res;
 }

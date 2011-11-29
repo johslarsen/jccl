@@ -3,5 +3,7 @@
 int main(void)
 {
 	fibonacci_test();
+	gcd_test();
+	chinese_remainder_test();
 	return 0;
 }

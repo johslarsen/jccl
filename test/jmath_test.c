@@ -29,3 +29,39 @@ void fibonacci_test(void)
 	}
 	assert(fibonacci(-1) == -EDOM);
 }
+
+void gcd_test(void) {
+	enum {
+		Ngcd = 3
+	};
+
+	const int a[Ngcd] = {0, 5, 92928};
+	const int b[Ngcd] = {1, 5, 123552};
+	const int ans[Ngcd] = {-EDOM, 5, 1056};
+
+	int i;
+	for (i = 0; i < Ngcd; i++) {
+		assert(gcd(a[i], b[i]) == ans[i]);
+	}
+}
+
+
+void chinese_remainder_test(void)
+{
+	enum {
+		Neq19 = 4,
+		Neq21 = 3,
+	};
+
+	const int a19[Neq19] = {1,2,3,4};
+	const int m19[Neq19] = {2,3,5,11};
+	assert(chinese_remainder(a19, m19, Neq19) == 323);
+
+	const int a21[Neq21] = {7, 4, 16};
+	const int m21[Neq21] = {9, 12, 21};
+	assert(chinese_remainder(a21, m21, Neq21) == -EDOM);
+
+	assert(chinese_remainder(NULL, m21, Neq21) == -EINVAL);
+	assert(chinese_remainder(a21, NULL, Neq21) == -EINVAL);
+	assert(chinese_remainder(a21, m21, 0) == -EINVAL);
+}
