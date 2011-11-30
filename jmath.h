@@ -15,6 +15,11 @@ long long fibonacci(int n);
 int gcd(int a, int b);
 
 /*
+* Least common multiple is the smallest positive integer which is divisable by both a and b without a remainder
+*/
+long long lcm(int a, int b);
+
+/*
  * Chinese remainder is a mathematical theorem to calculate x in an equation system like this:
  *   x \equiv a_1 % m_1
  *   x \equiv a_2 % m_2

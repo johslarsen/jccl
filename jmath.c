@@ -58,6 +58,21 @@ int gcd(int a, int b)
 	return n;
 }
 
+long long lcm(int a, int b)
+{
+	if (a == 0 || b == 0) {
+		return -EDOM;
+	}
+
+	long long res = ((long long)a*b)/gcd(a, b);
+	if (res < 0) {
+		// lcm() is always positive
+		res *= -1;
+	}
+
+	return res;
+}
+
 int chinese_remainder(const int *a, const int *m, int neq)
 {
 	if (a == NULL || m == NULL || neq < 1) {
