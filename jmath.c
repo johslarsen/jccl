@@ -117,6 +117,9 @@ int chinese_remainder(const int *a, const int *m, int neq)
 				break;
 			}
 		}
+		if (j == INT_MAX) {
+			return -ERANGE;
+		}
 	}
 
 	for (i = 0; i < neq; i++) {
@@ -127,9 +130,8 @@ int chinese_remainder(const int *a, const int *m, int neq)
 		res += sm;
 	}
 
-error_with_cleanup:
+error:
 	free(M);
 	free(y);
-error:
 	return res;
 }
