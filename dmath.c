@@ -1,4 +1,4 @@
-#include "jmath.h"
+#include "dmath.h"
 #include <math.h>
 #include <limits.h>
 #include <errno.h>

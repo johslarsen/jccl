@@ -1,5 +1,5 @@
-#include "jmath_test.h"
-#include "../jmath.h"
+#include "dmath_test.h"
+#include "../dmath.h"
 #include <assert.h>
 #include <errno.h>
 #include <stdio.h>

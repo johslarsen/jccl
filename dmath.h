@@ -1,5 +1,7 @@
-#ifndef JMATH_H
-#define JMATH_H
+#ifndef DMATH_H
+#define DMATH_H
+
+/* Discrete mathematics */
 
 /*
  * Returns the nth fibonacci number (0, 1, 1, 3, ...)
@@ -34,4 +36,4 @@ int arerelativeprime(int a, int b);
  */
 int chinese_remainder(const int *a, const int *m, int neq);
 
-#endif /* JMATH_H */
+#endif /* DMATH_H */
