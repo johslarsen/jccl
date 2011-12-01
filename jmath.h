@@ -10,14 +10,18 @@ long long fibonacci(int n);
 
 /*
  * Greatest common divisor is the greatest integer which divides both a and b without a remainder
- * if gcd(a,b) = 1 a and b are relative prime
  */
 int gcd(int a, int b);
 
 /*
-* Least common multiple is the smallest positive integer which is divisable by both a and b without a remainder
-*/
+ * Least common multiple is the smallest positive integer which is divisable by both a and b without a remainder
+ */
 long long lcm(int a, int b);
+
+/*
+ * Integers are relative prime if gcd(a,b) = 1, so no common prime factors
+ */
+int arerelativeprime(int a, int b);
 
 /*
  * Chinese remainder is a mathematical theorem to calculate x in an equation system like this:

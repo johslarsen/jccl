@@ -73,16 +73,32 @@ long long lcm(int a, int b)
 	return res;
 }
 
+int arerelativeprime(int a, int b)
+{
+	if (a == 0 || b == 0) {
+		return -EDOM;
+	}
+
+	return gcd(a, b) == 1;
+}
+
 int chinese_remainder(const int *a, const int *m, int neq)
 {
 	if (a == NULL || m == NULL || neq < 1) {
 		return -EINVAL;
 	}
 
-	// check that m[0]..m[neq-1] are pairwise relative prime
 	int i;
+	// check that every integer in arguments a and m are non-zero
+	for (i = 0; i < neq; i++) {
+		if (a[i] == 0 || m[i] == 0) {
+			return -EDOM;
+		}
+	}
+
+	// check that m[0]..m[neq-1] are pairwise relative prime
 	for (i = 0; i < neq-1; i++){
-		if (gcd(m[i], m[i+1]) != 1) {
+		if (!arerelativeprime(m[i], m[i+1])) {
 			return -EDOM;
 		}
 	}
