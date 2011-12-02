@@ -18,8 +18,10 @@ int main(void)
 	fibonacci_test();
 	gcd_lcm_arerelativeprime_test();
 	chinese_remainder_test();
+	isprime_test();
 
 	list_test();
 	list_iterator_test();
+
 	return 0;
 }

@@ -4,6 +4,7 @@
 void fibonacci_test(void);
 void gcd_lcm_arerelativeprime_test(void);
 void chinese_remainder_test(void);
+void isprime_test(void);
 
 #endif /* DMATH_TEST_H */
 

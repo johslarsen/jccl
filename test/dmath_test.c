@@ -2,6 +2,7 @@
 #include "../dmath.h"
 #include <assert.h>
 #include <errno.h>
+#include <limits.h>
 #include <stdio.h>
 #include <time.h>
 
@@ -70,4 +71,26 @@ void chinese_remainder_test(void)
 	assert(chinese_remainder(NULL, m21, Neq21) == -EINVAL);
 	assert(chinese_remainder(a21, NULL, Neq21) == -EINVAL);
 	assert(chinese_remainder(a21, m21, 0) == -EINVAL);
+}
+
+
+void isprime_test(void)
+{
+	enum {
+		Na = 5,
+	};
+
+	unsigned int a[] = 	{2,	3,	4,	25,
+#if (UINT_MAX == 65535)
+		65521		// highest int before 2^16
+#else
+		4294967291	// highest int before 2^32
+#endif
+	};
+	int ans[] = 		{1,	1,	0,	0,	1};
+
+	int i;
+	for (i = 0; i < Na; i++) {
+		assert(isprime(a[i]) == ans[i]);
+	}
 }

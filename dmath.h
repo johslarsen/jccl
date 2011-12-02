@@ -36,4 +36,6 @@ int arerelativeprime(int a, int b);
  */
 int chinese_remainder(const int *a, const int *m, int neq);
 
+int isprime(unsigned int n);
+
 #endif /* DMATH_H */

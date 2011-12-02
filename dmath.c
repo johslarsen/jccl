@@ -3,6 +3,8 @@
 #include <limits.h>
 #include <errno.h>
 #include <stdlib.h>
+#include <stdio.h>
+
 
 long long fibonacci(int n)
 {
@@ -37,6 +39,7 @@ long long fibonacci(int n)
 	return x_n;
 }
 
+
 int gcd(int a, int b)
 {
 	if (a == 0 || b == 0) {
@@ -58,6 +61,7 @@ int gcd(int a, int b)
 	return n;
 }
 
+
 long long lcm(int a, int b)
 {
 	if (a == 0 || b == 0) {
@@ -73,6 +77,7 @@ long long lcm(int a, int b)
 	return res;
 }
 
+
 int arerelativeprime(int a, int b)
 {
 	if (a == 0 || b == 0) {
@@ -81,6 +86,7 @@ int arerelativeprime(int a, int b)
 
 	return gcd(a, b) == 1;
 }
+
 
 int chinese_remainder(const int *a, const int *m, int neq)
 {
@@ -150,4 +156,53 @@ error:
 	free(M);
 	free(y);
 	return res;
+}
+
+
+int isprime(unsigned int n)
+{
+	enum {
+		Maxn = 4294967295, // 2^32-1, if some computer have UINT_MAX > 2^32-1, do not calculate primes above this
+#if (UINT_MAX == 65535)
+		Nprime = 54, // number of primes upto sqrt(2^16)
+#else
+		Nprime = 6542, // number of primes upto sqrt(2^32)
+#endif
+	};
+
+	if (n < 2) {
+		return -EDOM;
+	} else if (n > Maxn) {
+		return -ERANGE;
+	}
+
+	static unsigned int primes[Nprime];
+	static int nprime = 0;
+
+	if (nprime == 0) {
+		primes[nprime++] = 2;
+	}
+
+	unsigned int sqrtn = sqrt(n);
+
+	unsigned int i;
+	for (i = 0; i < nprime && primes[i] <= sqrtn; i++) {
+		if (n % primes[i] == 0) {
+			return 0;
+		}
+	}
+
+	for (i = primes[nprime-1]; i <= sqrtn; i++) {
+		if (isprime(i) && n % i == 0) {
+			return 0;
+		}
+	}
+
+	if (n > primes[nprime-1] && n < sqrt(UINT_MAX)) {
+		// only cache unique primes
+		// and primes above sqrt(UINT_MAX) will never be tested, so do not cahce them
+		primes[nprime++] = n;
+	}
+
+	return 1;
 }
