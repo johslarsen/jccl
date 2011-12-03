@@ -28,10 +28,7 @@ void list_test(void)
 	int items[NITEM];
 	int i;
 	for (i = 0; i < NITEM; i++) {
-		items[NITEM] = rand();
-	}
-
-	for (i = 0; i < NITEM; i++) {
+		items[i] = rand();
 		assert(list_size(list) == i);
 		assert(list_append(list, &items[i]) == 0);
 	}
@@ -69,9 +66,9 @@ void list_iterator_test(void)
 	assert(li != NULL);
 
 	int items[NITEM];
-	int i, j;
+	int i;
 	for (i = 0; i < NITEM; i++) {
-		items[i] == rand();
+		items[i] = rand();
 		list_append(list, &items[i]);
 		assert(list_next(li) == NULL); // should point to the head of the list as of its creation, empty list => NULL
 	}
