@@ -1,13 +1,14 @@
-#include "list_test.h"
 #include "../list.h"
 #include <assert.h>
 #include <errno.h>
 #include <stdlib.h>
 #include <stdio.h>
 
+
 enum {
 	NITEM = 100,
 };
+
 
 void list_test(void)
 {
@@ -55,6 +56,7 @@ void list_test(void)
 	assert(list_destroy(list) == 0);
 }
 
+
 void list_iterator_test(void)
 {
 	assert(list_createiterator(NULL) == NULL);
@@ -88,4 +90,12 @@ void list_iterator_test(void)
 
 	assert(list_destroyiterator(li) == 0);
 	list_destroy(list);
+}
+
+
+int main(void)
+{
+	list_test();
+	list_iterator_test();
+	return 0;
 }

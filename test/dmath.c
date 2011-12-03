@@ -1,10 +1,10 @@
-#include "dmath_test.h"
 #include "../dmath.h"
 #include <assert.h>
 #include <errno.h>
 #include <limits.h>
 #include <stdio.h>
 #include <time.h>
+
 
 void fibonacci_test(void)
 {
@@ -30,6 +30,7 @@ void fibonacci_test(void)
 	}
 	assert(fibonacci(-1) == -EDOM);
 }
+
 
 void gcd_lcm_arerelativeprime_test(void)
 {
@@ -93,4 +94,15 @@ void isprime_test(void)
 	for (i = 0; i < Na; i++) {
 		assert(isprime(a[i]) == ans[i]);
 	}
+}
+
+
+int main(void)
+{
+	fibonacci_test();
+	gcd_lcm_arerelativeprime_test();
+	chinese_remainder_test();
+	isprime_test();
+
+	return 0;
 }
