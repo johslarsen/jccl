@@ -9,7 +9,7 @@ CFLAGS += -Wall
 
 
 .PHONY: check
-check: dmath.test list.test
+check: dmath.test list.test table.test
 	for i in *.test; do ./$$i; done
 
 .PHONY: clean
@@ -22,4 +22,6 @@ clean:
 list.test: list.o test/list.o unittest.o
 	$(CC) $(CFLAGS) $^ -o $@
 dmath.test: dmath.o test/dmath.o unittest.o
+	$(CC) $(CFLAGS) $^ -o $@ -lm
+table.test: table.o test/table.o unittest.o
 	$(CC) $(CFLAGS) $^ -o $@ -lm
