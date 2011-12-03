@@ -1,18 +1,12 @@
-CC				= gcc
-COMPILE			= -pipe
-#OPTIMALIZATION	= -O2
-DEBUG			= -pg
-WARNINGS		= -Wall
-LIBS			= -lm
+CC		= gcc
 
-CFLAGS = $(COMPILE) $(OPTIMALIZATION) $(DEBUG) $(WARNINGS)
+CFLAGS  = -pipe
+CFLAGS += -g
+#CFLAGS += -p
+CFLAGS += -Wall
+#CFLAGS += -O2
 
-SRCS	= dmath.c list.c
-HEADERS	= $(SRCS:.c=.h)
-OBJS	= $(SRCS:.c=.o)
 
-TEST_SRCS = $(SRCS:^=test/)
-TEST_OBJS = $(TEST_SRCS:.c=.o)
 
 .PHONY: check
 check: dmath.test list.test
@@ -23,7 +17,7 @@ clean:
 	\rm -f *.o test/*.o *.test
 
 %.o: %.c
-	$(CC) $(CFLAGS) -c -o $@ $< $(LIBS)
+	$(CC) $(CFLAGS) -c -o $@ $<
 
 list.test: list.o test/list.o
 	$(CC) $(CFLAGS) $^ -o $@
