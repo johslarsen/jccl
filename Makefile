@@ -19,7 +19,7 @@ clean:
 %.o: %.c
 	$(CC) $(CFLAGS) -c -o $@ $<
 
-list.test: list.o test/list.o
+list.test: list.o test/list.o unittest.o
 	$(CC) $(CFLAGS) $^ -o $@
-dmath.test: dmath.o test/dmath.o
+dmath.test: dmath.o test/dmath.o unittest.o
 	$(CC) $(CFLAGS) $^ -o $@ -lm

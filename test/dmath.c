@@ -1,5 +1,5 @@
 #include "../dmath.h"
-#include <assert.h>
+#include "../unittest.h"
 #include <errno.h>
 #include <limits.h>
 #include <stdio.h>
@@ -26,9 +26,9 @@ void fibonacci_test(void)
 
 	int i;
 	for (i = 0; i < Nfibonacci; i++) {
-		assert(fibonacci(i) == fibonacci_answer[i]);
+		UNITTEST(fibonacci(i) == fibonacci_answer[i]);
 	}
-	assert(fibonacci(-1) == -EDOM);
+	UNITTEST(fibonacci(-1) == -EDOM);
 }
 
 
@@ -47,9 +47,9 @@ void gcd_lcm_arerelativeprime_test(void)
 
 	int i;
 	for (i = 0; i < Ngcd; i++) {
-		assert(gcd(a[i], b[i]) == gcd_ans[i]);
-		assert(lcm(a[i], b[i]) == lcm_ans[i]);
-		assert(arerelativeprime(a[i], b[i]) == rp_ans[i]);
+		UNITTEST(gcd(a[i], b[i]) == gcd_ans[i]);
+		UNITTEST(lcm(a[i], b[i]) == lcm_ans[i]);
+		UNITTEST(arerelativeprime(a[i], b[i]) == rp_ans[i]);
 	}
 }
 
@@ -63,15 +63,15 @@ void chinese_remainder_test(void)
 
 	const int a19[Neq19] = {1,2,3,4};
 	const int m19[Neq19] = {2,3,5,11};
-	assert(chinese_remainder(a19, m19, Neq19) == 323);
+	UNITTEST(chinese_remainder(a19, m19, Neq19) == 323);
 
 	const int a21[Neq21] = {7, 4, 16};
 	const int m21[Neq21] = {9, 12, 21};
-	assert(chinese_remainder(a21, m21, Neq21) == -EDOM);
+	UNITTEST(chinese_remainder(a21, m21, Neq21) == -EDOM);
 
-	assert(chinese_remainder(NULL, m21, Neq21) == -EINVAL);
-	assert(chinese_remainder(a21, NULL, Neq21) == -EINVAL);
-	assert(chinese_remainder(a21, m21, 0) == -EINVAL);
+	UNITTEST(chinese_remainder(NULL, m21, Neq21) == -EINVAL);
+	UNITTEST(chinese_remainder(a21, NULL, Neq21) == -EINVAL);
+	UNITTEST(chinese_remainder(a21, m21, 0) == -EINVAL);
 }
 
 
@@ -92,7 +92,7 @@ void isprime_test(void)
 
 	int i;
 	for (i = 0; i < Na; i++) {
-		assert(isprime(a[i]) == ans[i]);
+		UNITTEST(isprime(a[i]) == ans[i]);
 	}
 }
 
