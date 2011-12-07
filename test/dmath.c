@@ -54,6 +54,27 @@ void gcd_lcm_arerelativeprime_test(void)
 }
 
 
+void extended_gcd_test(void)
+{
+	enum {
+		Negcd = 6,
+	};
+
+	const int a[Negcd] =		{0,		1,		8348,	92928,	-92928,	92928};
+	const int b[Negcd] =		{1,		0,		5359,	123552,	123552,	-123552};
+	const int s_ans[Negcd] =	{0,		0,		1264,	4,		-4,		4};
+	const int t_ans[Negcd] =	{0,		0,		-1969,	-3,		-3,		3};
+	const int gcd_ans[Negcd] =	{-EDOM, -EDOM,	1,		1056,	1056,	1056};
+
+	int s, t, i;
+	for (i = 0; i < Negcd; i++) {
+		UNITTEST(extended_gcd(a[i], b[i], &s, &t) == gcd_ans[i]);
+		UNITTEST(s == s_ans[i]);
+		UNITTEST(t == t_ans[i]);
+	}
+}
+
+
 void chinese_remainder_test(void)
 {
 	enum {
@@ -101,6 +122,7 @@ int main(void)
 {
 	fibonacci_test();
 	gcd_lcm_arerelativeprime_test();
+	extended_gcd_test();
 	chinese_remainder_test();
 	isprime_test();
 

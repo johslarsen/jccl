@@ -17,6 +17,8 @@ long long lcm(int a, int b);
 /* Integers are relative prime if gcd(a,b) = 1, so no common prime factors */
 int arerelativeprime(int a, int b);
 
+/* sa + ts = gcd(a,b) */
+int extended_gcd(int a, int b, int *s, int *t);
 
 /* Chinese remainder is a mathematical theorem to calculate x in an equation system like this:
  *   x \equiv a_1 % m_1

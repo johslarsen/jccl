@@ -87,6 +87,37 @@ int arerelativeprime(int a, int b)
 }
 
 
+int extended_gcd(int a, int b, int *s, int *t) {
+	if (a == 0 || b == 0) {
+		*s = 0, *t = 0;
+		return -EDOM;
+	}
+
+	*s = 0, *t = 1;
+	int sprev = 1, tprev = 0;
+	int m; // modulo
+	while ((m = a % b) != 0) {
+		int q = a / b; // quotient
+		a = b;
+		b = m;
+
+		int stmp = *s, ttmp = *t;
+		*s = sprev - *s*q;
+		*t = tprev - *t*q;
+		sprev = stmp;
+		tprev = ttmp;
+	}
+
+	if (b < 0) {
+		b *= -1;
+		*s *= -1;
+		*t *= -1;
+	}
+
+	return b;
+}
+
+
 int chinese_remainder(const int *a, const int *m, int neq)
 {
 	if (a == NULL || m == NULL || neq < 1) {
@@ -128,18 +159,10 @@ int chinese_remainder(const int *a, const int *m, int neq)
 	}
 
 	for (i = 0; i < neq; i++) {
-		int j = 0;
-		while(++j < INT_MAX) {
-			if ((M[i]*j) % m[i] == 1) {
-				y[i] = j;
-				break;
-			} else if ((M[i]*-j) % m[i] == 1) {
-				y[i] = -j;
-				break;
-			}
-		}
-		if (j == INT_MAX) {
-			return -ERANGE;
+		int tmp;
+		if (extended_gcd(M[i], m[i], &y[i], &tmp) != 1) {
+			res = -EDOM;
+			goto error;
 		}
 	}
 
