@@ -113,6 +113,7 @@ void isprime_test(void)
 
 	int i;
 	for (i = 0; i < Na; i++) {
+		UNITTEST(isprime_cached(a[i]) == ans[i]);
 		UNITTEST(isprime(a[i]) == ans[i]);
 	}
 }

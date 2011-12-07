@@ -181,7 +181,24 @@ error:
 }
 
 
-int isprime(unsigned int n)
+int isprime(long long unsigned int n)
+{
+	if (n < 2) {
+		return -EDOM;
+	}
+
+	long long unsigned int i, sqrtn = sqrt(n);
+	for (i = 2; i <= sqrtn; i++) {
+		if (n % i == 0) {
+			return 0;
+		}
+	}
+
+	return 1;
+}
+
+
+int isprime_cached(unsigned int n)
 {
 	enum {
 		Maxn = 4294967295, // 2^32-1, if some computer have UINT_MAX > 2^32-1, do not calculate primes above this
@@ -215,7 +232,7 @@ int isprime(unsigned int n)
 	}
 
 	for (i = primes[nprime-1]; i <= sqrtn; i++) {
-		if (isprime(i) && n % i == 0) {
+		if (isprime_cached(i) && n % i == 0) {
 			return 0;
 		}
 	}

@@ -29,6 +29,7 @@ int extended_gcd(int a, int b, int *s, int *t);
  * m_1..m_neq must be pairwise relative prime (gcd(m_1, m-2) = 1, ...) */
 int chinese_remainder(const int *a, const int *m, int neq);
 
-int isprime(unsigned int n);
+int isprime(long long unsigned int n);
+int isprime_cached(unsigned int n);
 
 #endif /* DMATH_H */
