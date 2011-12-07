@@ -47,18 +47,17 @@ int gcd(int a, int b)
 	}
 
 	int m; // modulo
-	int n = a; // previous modulo, at the end of the algorithm gcd
 	while ((m = a % b) != 0) {
 		a = b;
-		b = n = m;
+		b = m;
 	}
 
-	if (n < 0) {
+	if (b < 0) {
 		// gcd() is always positive
-		n *= -1;
+		b *= -1;
 	}
 
-	return n;
+	return b;
 }
 
 
