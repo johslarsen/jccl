@@ -42,7 +42,7 @@ void gcd_lcm_arerelativeprime_test(void)
 	const int b[Ngcd] =			{1,		0,		5, 123552,	123552,		-123552,	17, 64};
 	const int gcd_ans[Ngcd] =	{-EDOM, -EDOM,	5, 1056,	1056,		1056,		1,	1};
 	const int lcm_ans[Ngcd] =	{-EDOM, -EDOM,	5, 10872576,10872576,	10872576,	391,3136};
-	const int rp_ans[Ngcd] =	{-EDOM, -EDOM,	0, 0,		0,			0,			1,	1};
+	const int rp_ans[Ngcd] =	{0,		0,		0, 0,		0,			0,			1,	1};
 
 
 	int i;

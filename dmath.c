@@ -79,10 +79,6 @@ long long lcm(int a, int b)
 
 int arerelativeprime(int a, int b)
 {
-	if (a == 0 || b == 0) {
-		return -EDOM;
-	}
-
 	return gcd(a, b) == 1;
 }
 
@@ -184,7 +180,7 @@ error:
 int isprime(long long unsigned int n)
 {
 	if (n < 2) {
-		return -EDOM;
+		return 0;
 	}
 
 	long long unsigned int i, sqrtn = sqrt(n);
@@ -209,10 +205,8 @@ int isprime_cached(unsigned int n)
 #endif
 	};
 
-	if (n < 2) {
-		return -EDOM;
-	} else if (n > Maxn) {
-		return -ERANGE;
+	if (n < 2 || n > Maxn) {
+		return 0;
 	}
 
 	static unsigned int primes[Nprime];
