@@ -14,8 +14,8 @@ int gcd(int a, int b);
 /* Least common multiple is the smallest positive integer which is divisable by both a and b without a remainder */
 long long lcm(int a, int b);
 
-/* Integers are relative prime if gcd(a,b) = 1, so no common prime factors */
-int arerelativeprime(int a, int b);
+/* Integers are coprime if gcd(a,b) = 1, so no common prime factors */
+int arecoprime(int a, int b);
 
 /* sa + ts = gcd(a,b) */
 int extended_gcd(int a, int b, int *s, int *t);
@@ -26,7 +26,7 @@ int extended_gcd(int a, int b, int *s, int *t);
  *      ...
  *   x \equiv a_neq % m_neq
  *
- * m_1..m_neq must be pairwise relative prime (gcd(m_1, m-2) = 1, ...) */
+ * m_1..m_neq must be pairwise coprime (gcd(m_1, m-2) = 1, ...) */
 int chinese_remainder(const int *a, const int *m, int neq);
 
 int isprime(long long unsigned int n);

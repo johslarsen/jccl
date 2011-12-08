@@ -32,7 +32,7 @@ void fibonacci_test(void)
 }
 
 
-void gcd_lcm_arerelativeprime_test(void)
+void gcd_lcm_arecoprime_test(void)
 {
 	enum {
 		Ngcd = 8
@@ -42,14 +42,14 @@ void gcd_lcm_arerelativeprime_test(void)
 	const int b[Ngcd] =			{1,		0,		5, 123552,	123552,		-123552,	17, 64};
 	const int gcd_ans[Ngcd] =	{-EDOM, -EDOM,	5, 1056,	1056,		1056,		1,	1};
 	const int lcm_ans[Ngcd] =	{-EDOM, -EDOM,	5, 10872576,10872576,	10872576,	391,3136};
-	const int rp_ans[Ngcd] =	{0,		0,		0, 0,		0,			0,			1,	1};
+	const int cp_ans[Ngcd] =	{0,		0,		0, 0,		0,			0,			1,	1};
 
 
 	int i;
 	for (i = 0; i < Ngcd; i++) {
 		UNITTEST(gcd(a[i], b[i]) == gcd_ans[i]);
 		UNITTEST(lcm(a[i], b[i]) == lcm_ans[i]);
-		UNITTEST(arerelativeprime(a[i], b[i]) == rp_ans[i]);
+		UNITTEST(arecoprime(a[i], b[i]) == cp_ans[i]);
 	}
 }
 
@@ -122,7 +122,7 @@ void isprime_test(void)
 int main(void)
 {
 	fibonacci_test();
-	gcd_lcm_arerelativeprime_test();
+	gcd_lcm_arecoprime_test();
 	extended_gcd_test();
 	chinese_remainder_test();
 	isprime_test();
