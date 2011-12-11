@@ -10,7 +10,7 @@ CFLAGS += -Wall
 
 .PHONY: check
 check: dmath.test list.test table.test
-	for i in *.test; do ./$$i; done
+	for i in *.test; do echo "$$i:"; ./"$$i" 2>&1 | sed 's/^/\t/'; done
 
 .PHONY: clean
 clean:
