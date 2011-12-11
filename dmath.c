@@ -280,3 +280,24 @@ int basestring_char_to_int(char c)
 		return -EDOM;
 	}
 }
+
+
+unsigned int modular_exponentiation(unsigned int b, unsigned int e, unsigned int m)
+{
+	if (m < 1) {
+		return -EDOM;
+	}
+
+	long long unsigned result = 1;
+	while (e > 0) {
+		b = b % m;
+		if (e & 1) {
+			result *= b;
+		}
+
+		e >>= 1;
+		b = b * b;
+	}
+
+	return result % m;
+}

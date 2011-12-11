@@ -165,6 +165,24 @@ void logbi_uint_to_basestring_test(void)
 }
 
 
+void modular_exponentiation_test(void)
+{
+	enum {
+		Nme = 3,
+	};
+
+	int b[Nme] =	{3,		7,	3};
+	int e[Nme] =	{644,	644,2003};
+	int m[Nme] =	{645,	645,99};
+	int ans[Nme] =	{36,	436,27};
+
+	int i;
+	for (i = 0; i < Nme; i++) {
+		UNITTEST(modular_exponentiation(b[i], e[i], m[i]) == ans[i]);
+	}
+}
+
+
 int main(void)
 {
 	fibonacci_test();
@@ -173,6 +191,7 @@ int main(void)
 	chinese_remainder_test();
 	isprime_test();
 	logbi_uint_to_basestring_test();
+	modular_exponentiation_test();
 
 	return 0;
 }

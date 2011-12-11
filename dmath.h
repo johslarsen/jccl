@@ -49,4 +49,8 @@ extern const char *basestring_alphabet;
  * using character types, so it is much faster than locating the character in basestring_alphabet*/
 int basestring_char_to_int(char c);
 
+/* modular exponentiation is a type of exponentiation performed over a modulus
+ * b^e % m */
+unsigned int modular_exponentiation(unsigned int b, unsigned int e, unsigned m);
+
 #endif /* DMATH_H */
