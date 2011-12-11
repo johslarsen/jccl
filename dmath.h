@@ -32,4 +32,21 @@ int chinese_remainder(const int *a, const int *m, int neq);
 int isprime(long long unsigned int n);
 int isprime_cached(unsigned int n);
 
+/* integer operations to find the ceiling value of the base logaritm of n 
+ * in this library it is used to compute the length needed for a conversion from n to a basestring */
+int logbi(long long unsigned int n, int base);
+
+/* convert the integer n into any base
+ * the result is stored as a string of characters in bs, assuming bs is large enough
+ * the alphabet of the basestring is {0..9}{a..z}
+ * returns -ERANGE if base is out of the alphabet range (2-36) */
+int uint_to_basestring(long long unsigned int n, int base, char *bs);
+
+/* the alphabet used for basestrings */
+extern const char *basestring_alphabet;
+
+/* conversion from a basestring character to the integer it represent
+ * using character types, so it is much faster than locating the character in basestring_alphabet*/
+int basestring_char_to_int(char c);
+
 #endif /* DMATH_H */

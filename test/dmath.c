@@ -3,6 +3,7 @@
 #include <errno.h>
 #include <limits.h>
 #include <stdio.h>
+#include <string.h>
 #include <time.h>
 
 
@@ -119,6 +120,51 @@ void isprime_test(void)
 }
 
 
+void logbi_uint_to_basestring_test(void)
+{
+	enum {
+		Nuint = 5,
+	};
+
+	long long unsigned int n[Nuint] =	{16,	127,	128,	UINT_MAX,	ULONG_MAX};
+	int log2i_ans[Nuint] =				{5,		7,		8,		32,			64};
+	int base[Nuint] =					{3,		5,		7,		11,			36};
+	int logbi_ans[Nuint] =				{3,		4,		3,		10,			13};
+	char *uint_to_base_2_string_ans[Nuint] = {	"10000",
+												"1111111",
+												"10000000",
+												"11111111111111111111111111111111",
+												"1111111111111111111111111111111111111111111111111111111111111111"
+	};
+	char *uint_to_base_b_string_ans[Nuint] = {	"121",
+												"1002",
+												"242",
+												"1904440553",
+												"3w5e11264sgsf"
+	};
+
+	char bs[65];
+
+	int i;
+	for (i = 0; i < Nuint; i++) {
+		UNITTEST(logbi(n[i], 2) == log2i_ans[i]);
+		UNITTEST(logbi(n[i], base[i]) == logbi_ans[i]);
+
+		int len;
+		UNITTEST((len = uint_to_basestring(n[i], 2, bs)) == log2i_ans[i]);
+		UNITTEST(strcmp(bs, uint_to_base_2_string_ans[i]) == 0);
+		
+		UNITTEST((len = uint_to_basestring(n[i], base[i], bs)) == logbi_ans[i]);
+		UNITTEST(strcmp(bs, uint_to_base_b_string_ans[i]) == 0);
+
+		char *bsp;
+		for (bsp = bs; *bsp != '\0'; bsp++) {
+			UNITTEST(basestring_alphabet[basestring_char_to_int(*bsp)] == *bsp);
+		}
+	}
+}
+
+
 int main(void)
 {
 	fibonacci_test();
@@ -126,6 +172,7 @@ int main(void)
 	extended_gcd_test();
 	chinese_remainder_test();
 	isprime_test();
+	logbi_uint_to_basestring_test();
 
 	return 0;
 }

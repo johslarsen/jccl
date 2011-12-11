@@ -1,4 +1,5 @@
 #include "dmath.h"
+#include <ctype.h>
 #include <math.h>
 #include <limits.h>
 #include <errno.h>
@@ -238,4 +239,44 @@ int isprime_cached(unsigned int n)
 	}
 
 	return 1;
+}
+
+
+int logbi(long long unsigned int n, int base)
+{
+	int i;
+	for (i = 0; n > 0; i++) {
+		n /= base;
+	}
+
+	return i;
+}
+
+
+const char *basestring_alphabet = "0123456789abcdefghijklmnopqrstuvwxyz";
+int uint_to_basestring(long long unsigned int n, int base, char *bs)
+{
+	if (base > 36) {
+		return -EDOM;
+	}
+
+	int i, len;
+	len = logbi(n, base);
+	for (i = len-1; n > 0; n /= base) {
+		bs[i--] = basestring_alphabet[n % base];
+	}
+	bs[len] = '\0';
+	return len;
+}
+
+
+int basestring_char_to_int(char c)
+{
+	if (isdigit(c)) {
+		return c - '0';
+	} else if (islower(c)) {
+		return c - 'a' + 10;
+	} else {
+		return -EDOM;
+	}
 }
