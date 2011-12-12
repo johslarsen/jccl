@@ -9,7 +9,7 @@ CFLAGS += -Wall
 
 
 .PHONY: check
-check: dmath.test list.test table.test
+check: dmath.test list.test sort.test table.test
 	for i in *.test; do echo "$$i:"; ./"$$i" 2>&1 | sed 's/^/\t/'; done
 
 .PHONY: clean
@@ -23,5 +23,7 @@ list.test: list.o test/list.o unittest.o
 	$(CC) $(CFLAGS) $^ -o $@
 dmath.test: dmath.o test/dmath.o unittest.o
 	$(CC) $(CFLAGS) $^ -o $@ -lm
+sort.test: sort.o test/sort.o unittest.o
+	$(CC) $(CFLAGS) $^ -o $@
 table.test: table.o test/table.o unittest.o
 	$(CC) $(CFLAGS) $^ -o $@ -lm
