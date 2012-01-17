@@ -8,7 +8,7 @@ typedef struct List List;
 /* Create new list */
 List *list_create(void);
 
-/* Free list. 
+/* Free list.
  * All nodes are freed, but items pointed to by nodes are preserved. */
 int list_destroy(List *list);
 
@@ -30,7 +30,7 @@ int list_size(List *list);
 
 
 /* List iterator interface */
- 
+
 typedef struct List_iterator List_iterator;
 
 /* Create new list iterator */
