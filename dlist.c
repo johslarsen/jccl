@@ -12,11 +12,13 @@
 typedef struct Dlist_node Dlist_node;
 struct Dlist_node {
 	Dlist_node	*next;
+	Dlist_node	*prev;
 	void		*item;
 };
 
 struct Dlist {
 	Dlist_node 	*head;
+	Dlist_node	*tail;
 	int 		numitems;
 };
 
@@ -29,6 +31,7 @@ Dlist *dlist_init(void)
 	}
 
 	list->head = NULL;
+	list->tail = NULL;
 	list->numitems = 0;
 
 	return list;
@@ -42,8 +45,8 @@ int dlist_free(Dlist *list)
 	}
 
 	// remove each node
-	while (list->head != NULL) {
-		dlist_pop(list);
+	while (dlist_pop(list)) {
+		;
 	}
 
 	// remove the list
@@ -64,6 +67,7 @@ static Dlist_node *dlist_addnode(void *item)
 	}
 
 	node->next = NULL;
+	node->prev = NULL;
 	node->item = item;
 
 	return node;
@@ -91,13 +95,19 @@ int dlist_prepend(Dlist *list, void *item)
 		return EINVAL;
 	}
 
-	Dlist_node *node = dlist_addnode(item);
-	if (node == NULL) {
+	Dlist_node *np = dlist_addnode(item);
+	if (np == NULL) {
 		return errno;
 	}
 
-	node->next = list->head;
-	list->head = node;
+	np->next = list->head;
+	if (np->next == NULL) {
+		list->tail = np;
+	} else {
+		np->next->prev = np;
+	}
+
+	list->head = np;
 	list->numitems++;
 
 	return 0;
@@ -110,25 +120,19 @@ int dlist_append(Dlist *list, void *item)
 		return EINVAL;
 	}
 
-	Dlist_node *node = dlist_addnode(item);
-	if (node == NULL) {
+	Dlist_node *np = dlist_addnode(item);
+	if (np == NULL) {
 		return errno;
 	}
 
-	if (list->head == NULL) {
-		// empty list
-		list->head = node;
+	np->prev = list->tail;
+	if (np->prev == NULL) {
+		list->head = np;
 	} else {
-		// nonempty list
-		Dlist_node *np = list->head; // node pointer
-
-		// traverse to last node
-		while(np->next != NULL) {
-			np = np->next;
-		}
-		np->next = node;
+		np->prev->next = np;
 	}
 
+	list->tail = np;
 	list->numitems++;
 
 	return 0;
@@ -137,8 +141,9 @@ int dlist_append(Dlist *list, void *item)
 
 int dlist_remove(Dlist *list, void *item)
 {
-	if (list == NULL)
+	if (list == NULL) {
 		return EINVAL;
+	}
 
 	Dlist_node *np = NULL; // node pointer
 	if (list->head == NULL) {
@@ -146,26 +151,33 @@ int dlist_remove(Dlist *list, void *item)
 		return EINVAL;
 	}
 
-	if (list->head->item == item) {
+	np = list->head;
+	if (np->item == item) {
 		// item at head of list
-		np = list->head;
 		list->head = np->next;
+		if (list->head == NULL) {
+			list->tail = NULL;
+		} else {
+			list->head->prev = NULL;
+		}
 	} else {
 		// locate item in list
-		Dlist_node *pnp = list->head; // previous node pointer
 
 		// traverse list to find item
-		while (pnp->next != NULL && pnp->next->item != item) {
-			pnp = pnp->next;
+		while (np != NULL && np->item != item) {
+			np = np->next;
 		}
 
-		if (pnp->next == NULL) {
+		if (np == NULL) {
 			//item not in list
 			return EINVAL;
 		}
-
-		np = pnp->next;
-		pnp->next = np->next;
+		np->prev->next = np->next;
+		if (np->next == NULL) {
+			list->tail = np->prev;
+		} else {
+			np->next->prev = np->prev;
+		}
 	}
 
 	// item located, remove it
@@ -177,20 +189,47 @@ int dlist_remove(Dlist *list, void *item)
 
 void *dlist_pop(Dlist *list)
 {
+	if (list == NULL || list->tail == NULL) {
+		return NULL;
+	}
+
+	Dlist_node *np = list->tail;
+	if (np->prev == NULL) {
+		list->head = NULL;
+	} else {
+		np->prev->next = NULL;
+	}
+	list->tail = np->prev;
+
+	void *item = np->item;
+	dlist_freenode(np);
+	list->numitems--;
+
+	return item;
+}
+
+
+void *dlist_shift(Dlist *list)
+{
 	if (list == NULL || list->head == NULL) {
 		return NULL;
 	}
 
 	Dlist_node *np = list->head;
+	if (np->next == NULL) {
+		list->tail = NULL;
+	} else {
+		np->next->prev = NULL;
+	}
 	list->head = np->next;
 
 	void *item = np->item;
+	dlist_freenode(np);
 	list->numitems--;
-	free(np);
 
 	return item;
 }
-	
+
 
 int dlist_size(Dlist *list)
 {

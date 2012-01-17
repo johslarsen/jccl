@@ -12,20 +12,24 @@ Dlist *dlist_init(void);
  * All nodes are freed, but items pointed to by nodes are preserved. */
 int dlist_free(Dlist *list);
 
-/* Insert item first in list */
+/* Insert item first in list O=1 */
 int dlist_prepend(Dlist *list, void *item);
 
-/* Insert item last in list */
+/* Insert item last in list O=1 */
 int dlist_append(Dlist *list, void *item);
 
-/* Remove object from list */
+/* Remove object from list. O=n, n = index of item */
 int dlist_remove(Dlist *list, void *item);
 
-/* Pop the first item off the list
+/* Pop the list item off the list. O=1
  * The node that points to the item popped will be removed */
 void *dlist_pop(Dlist *list);
 
-/* Return # of items in list */
+/* Shift the first item off the list. O=1
+ * The node that points to the item shifted will be removed */
+void *dlist_shift(Dlist *list);
+
+/* Return # of items in list. O=1 */
 int dlist_size(Dlist *list);
 
 

@@ -19,6 +19,7 @@ void dlist_test(void)
 	UNITTEST(dlist_prepend(NULL, item) == EINVAL);
 	UNITTEST(dlist_append(NULL, item) == EINVAL);
 	UNITTEST(dlist_remove(NULL, item) == EINVAL);
+	UNITTEST(dlist_shift(NULL) == NULL);
 	UNITTEST(dlist_pop(NULL) == NULL);
 	UNITTEST(dlist_size(NULL) == -EINVAL);
 
@@ -27,6 +28,11 @@ void dlist_test(void)
 		fprintf(stderr, "dlist_test: can not create list, aborting\n");
 		return;
 	}
+
+	// empty list
+	UNITTEST(dlist_remove(list, item) == EINVAL);
+	UNITTEST(dlist_shift(list) == NULL);
+	UNITTEST(dlist_pop(list) == NULL);
 
 	int items[NITEM];
 	int i;
@@ -50,8 +56,19 @@ void dlist_test(void)
 
 	for (i = 0; i < NITEM; i++) {
 		UNITTEST(dlist_size(list) == NITEM-i);
+		UNITTEST(dlist_shift(list) == &items[NITEM-1-i]); // items were added in reverse order
+	}
+	UNITTEST(dlist_size(list) == 0);
+
+	for (i = 0; i < NITEM; i++) {
+		UNITTEST(dlist_append(list, &items[i]) == 0);
+	}
+
+	for (i = 0; i < NITEM; i++) {
+		UNITTEST(dlist_size(list) == NITEM-i);
 		UNITTEST(dlist_pop(list) == &items[NITEM-1-i]);
 	}
+	UNITTEST(dlist_size(list) == 0);
 
 	UNITTEST(dlist_free(list) == 0);
 }
@@ -74,6 +91,9 @@ void dlist_iterator_test(void)
 		fprintf(stderr, "dlist_iterator_test: can not create dlist_iterator, aborting\n");
 		return;
 	}
+
+	// empty list
+	UNITTEST(dlist_iterator_next(li) == NULL);
 
 	int items[NITEM];
 	int i;
