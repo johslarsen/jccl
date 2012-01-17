@@ -13,13 +13,13 @@ void table_test(void)
 	char *somekey = "key";
 	int somevalue = rand();
 
-	UNITTEST(table_create(0) == NULL);
-	UNITTEST(table_destroy(NULL) == EINVAL);
+	UNITTEST(table_init(0) == NULL);
+	UNITTEST(table_free(NULL) == EINVAL);
 	UNITTEST(table_add(NULL, somekey, &somevalue) == EINVAL);
 	UNITTEST(table_remove(NULL, somekey) == EINVAL);
 	UNITTEST(table_lookup(NULL, somekey) == NULL);
 
-	Table *table = table_create(Nkey - 1); // when table is smaller than the number of keys there have to be at least 1 hash chain with more than 1 key
+	Table *table = table_init(Nkey - 1); // when table is smaller than the number of keys there have to be at least 1 hash chain with more than 1 key
 	if (table == NULL) {
 		fprintf(stderr, "table_test: can not create table, aborting\n");
 		return;
@@ -47,7 +47,7 @@ void table_test(void)
 		UNITTEST(table_lookup(table, keys[i]) == NULL);
 	}
 	
-	UNITTEST(table_destroy(table) == 0);
+	UNITTEST(table_free(table) == 0);
 }
 
 int main(void)

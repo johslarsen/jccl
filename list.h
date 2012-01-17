@@ -6,11 +6,11 @@
 typedef struct List List;
 
 /* Create new list */
-List *list_create(void);
+List *list_init(void);
 
 /* Free list.
  * All nodes are freed, but items pointed to by nodes are preserved. */
-int list_destroy(List *list);
+int list_free(List *list);
 
 /* Insert item first in list */
 int list_prepend(List *list, void *item);
@@ -34,15 +34,15 @@ int list_size(List *list);
 typedef struct List_iterator List_iterator;
 
 /* Create new list iterator */
-List_iterator *list_createiterator(List *list);
+List_iterator *list_iterator_init(List *list);
 
 /* Free iterator */
-int list_destroyiterator(List_iterator *li);
+int list_iterator_free(List_iterator *li);
 
 /* Move iterator to next item and return current */
-void *list_next(List_iterator *li);
+void *list_iterator_next(List_iterator *li);
 
 /* Let iterator point to first item in list */
-int list_resetiterator(List_iterator *li);
+int list_iterator_reset(List_iterator *li);
 
 #endif /*LIST_H_*/

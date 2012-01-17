@@ -21,7 +21,7 @@ struct List {
 };
 
 
-List *list_create(void)
+List *list_init(void)
 {
 	List *list = malloc(sizeof(*list)); // new list
 	if (list == NULL) {
@@ -35,7 +35,7 @@ List *list_create(void)
 }
 
 
-int list_destroy(List *list)
+int list_free(List *list)
 {
 	if (list == NULL) {
 		return EINVAL;
@@ -213,7 +213,7 @@ struct List_iterator {
 };
 
 
-List_iterator *list_createiterator(List *list)
+List_iterator *list_iterator_init(List *list)
 {
 	if (list == NULL) {
 		return NULL;
@@ -231,7 +231,7 @@ List_iterator *list_createiterator(List *list)
 }
 
 
-int list_destroyiterator(List_iterator *li)
+int list_iterator_free(List_iterator *li)
 {
 	if (li == NULL) {
 		return EINVAL;
@@ -242,7 +242,7 @@ int list_destroyiterator(List_iterator *li)
 }
 
 
-void *list_next(List_iterator *li)
+void *list_iterator_next(List_iterator *li)
 {
 	if (li == NULL) {
 		return NULL;
@@ -260,7 +260,7 @@ void *list_next(List_iterator *li)
 }
 
 
-int list_resetiterator(List_iterator *li)
+int list_iterator_reset(List_iterator *li)
 {
 	if (li == NULL) {
 		return EINVAL;

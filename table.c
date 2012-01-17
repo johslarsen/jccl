@@ -16,7 +16,7 @@ struct Table {
 };
 
 
-Table *table_create(unsigned int size)
+Table *table_init(unsigned int size)
 {
 	if (size == 0) {
 		return NULL;
@@ -32,7 +32,7 @@ Table *table_create(unsigned int size)
 
 	table->table = (Table_node **)calloc(sizeof(*table->table), table->size);
 	if (table->table == NULL) {
-		table_destroy(table);
+		table_free(table);
 		return NULL;
 	}
 
@@ -40,7 +40,7 @@ Table *table_create(unsigned int size)
 }
 
 
-int table_destroy(Table *table)
+int table_free(Table *table)
 {
 	if (table == NULL) {
 		return EINVAL;
