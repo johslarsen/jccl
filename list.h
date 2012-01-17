@@ -12,20 +12,24 @@ List *list_init(void);
  * All nodes are freed, but items pointed to by nodes are preserved. */
 int list_free(List *list);
 
-/* Insert item first in list */
+/* Insert item first in list. O=1 */
 int list_prepend(List *list, void *item);
 
-/* Insert item last in list */
+/* Insert item last in list. O=n */
 int list_append(List *list, void *item);
 
-/* Remove object from list */
+/* Remove object from list. O=n, n = index of item */
 int list_remove(List *list, void *item);
 
-/* Pop the first item off the list
+/* Shift the first item off the list. O=1
+ * The node thatt points to the item shifted will be removed */
+void *list_shift(List *list);
+
+/* Pop the last item off the list. O=n
  * The node that points to the item popped will be removed */
 void *list_pop(List *list);
 
-/* Return # of items in list */
+/* Return # of items in list. O=1 */
 int list_size(List *list);
 
 

@@ -42,8 +42,8 @@ int list_free(List *list)
 	}
 
 	// remove each node
-	while (list->head != NULL) {
-		list_pop(list);
+	while (list_shift(list) != NULL) {
+		;
 	}
 
 	// remove the list
@@ -175,7 +175,7 @@ int list_remove(List *list, void *item)
 }
 
 
-void *list_pop(List *list)
+void *list_shift(List *list)
 {
 	if (list == NULL || list->head == NULL) {
 		return NULL;
@@ -186,7 +186,34 @@ void *list_pop(List *list)
 
 	void *item = np->item;
 	list->numitems--;
-	free(np);
+	list_freenode(np);
+
+	return item;
+}
+
+
+void *list_pop(List *list)
+{
+	if (list == NULL || list->head == NULL) {
+		return NULL;
+	}
+
+	List_node *np = list->head;
+	if (np->next == NULL) {
+		list->head = NULL;
+	} else {
+		while (np->next->next != NULL) {
+			// traverse to the end of the list
+			np = np->next;
+		}
+		List_node *pnp = np;
+		np = pnp->next;
+		pnp->next = NULL;
+	}
+
+	void *item = np->item;
+	list_freenode(np);
+	list->numitems--;
 
 	return item;
 }
