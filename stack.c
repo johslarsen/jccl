@@ -17,6 +17,8 @@ struct Stack {
 	void	**items;
 };
 
+/* Increase the size of the the stack by a multiple of 2 
+ * using realloc so that the items are preserved */
 static int stack_expand(Stack *stack)
 {
 	if (stack == NULL) {

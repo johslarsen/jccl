@@ -5,9 +5,7 @@
 #include "list.h"
 
 
-/*
- * List implementation
- */
+/* Double linked list implementation */
 
 typedef struct List_node List_node;
 struct List_node {
@@ -55,10 +53,8 @@ int list_free(List *list)
 }
 
 
-/*
- * Create a node.
- * Points to the original item.
- */
+/* Create a node.
+ * Points to the original item.*/
 static List_node *list_addnode(void *item)
 {
 	List_node *node = malloc(sizeof(*node));
@@ -74,10 +70,8 @@ static List_node *list_addnode(void *item)
 }
 
 
-/*
- * Frees the memory allocated by a node.
- * Item is preserved.
- */
+/* Frees the memory allocated by a node.
+ * Item is preserved. */
 static int list_freenode(List_node *node)
 {
 	if (node == NULL) {
@@ -241,9 +235,7 @@ int list_size(List *list)
 }
 
 
-/*
- * Iterator implementation
- */
+/* Double linked list iterator implementation */
 
 
 struct List_iterator {

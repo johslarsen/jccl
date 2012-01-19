@@ -5,9 +5,7 @@
 #include "list.h"
 
 
-/*
- * List implementation
- */
+/* Singel linked list implementation */
 
 typedef struct List_node List_node;
 struct List_node {
@@ -229,9 +227,7 @@ int list_size(List *list)
 }
 
 
-/*
- * Iterator implementation
- */
+/* Single linked list iterator implementation */
 
 
 struct List_iterator {
