@@ -21,7 +21,7 @@ clean:
 
 list.test: list.o test/list.o unittest.o
 	$(CC) $(CFLAGS) $^ -o $@
-dlist.test: dlist.o test/dlist.o unittest.o
+dlist.test: dlist.o test/list.o unittest.o
 	$(CC) $(CFLAGS) $^ -o $@
 dmath.test: dmath.o test/dmath.o unittest.o
 	$(CC) $(CFLAGS) $^ -o $@ -lm

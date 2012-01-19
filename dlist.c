@@ -2,30 +2,30 @@
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "dlist.h"
+#include "list.h"
 
 
 /*
  * List implementation
  */
 
-typedef struct Dlist_node Dlist_node;
-struct Dlist_node {
-	Dlist_node	*next;
-	Dlist_node	*prev;
+typedef struct List_node List_node;
+struct List_node {
+	List_node	*next;
+	List_node	*prev;
 	void		*item;
 };
 
-struct Dlist {
-	Dlist_node 	*head;
-	Dlist_node	*tail;
+struct List {
+	List_node 	*head;
+	List_node	*tail;
 	int 		numitems;
 };
 
 
-Dlist *dlist_init(void)
+List *list_init(void)
 {
-	Dlist *list = malloc(sizeof(*list)); // new list
+	List *list = malloc(sizeof(*list)); // new list
 	if (list == NULL) {
 		return NULL;
 	}
@@ -38,14 +38,14 @@ Dlist *dlist_init(void)
 }
 
 
-int dlist_free(Dlist *list)
+int list_free(List *list)
 {
 	if (list == NULL) {
 		return EINVAL;
 	}
 
 	// remove each node
-	while (dlist_pop(list)) {
+	while (list_pop(list)) {
 		;
 	}
 
@@ -59,9 +59,9 @@ int dlist_free(Dlist *list)
  * Create a node.
  * Points to the original item.
  */
-static Dlist_node *dlist_addnode(void *item)
+static List_node *list_addnode(void *item)
 {
-	Dlist_node *node = malloc(sizeof(*node));
+	List_node *node = malloc(sizeof(*node));
 	if (node == NULL) {
 		return NULL;
 	}
@@ -78,7 +78,7 @@ static Dlist_node *dlist_addnode(void *item)
  * Frees the memory allocated by a node.
  * Item is preserved.
  */
-static int dlist_freenode(Dlist_node *node)
+static int list_freenode(List_node *node)
 {
 	if (node == NULL) {
 		return EINVAL;
@@ -89,13 +89,13 @@ static int dlist_freenode(Dlist_node *node)
 }
 
 
-int dlist_prepend(Dlist *list, void *item)
+int list_prepend(List *list, void *item)
 {
 	if (list == NULL) {
 		return EINVAL;
 	}
 
-	Dlist_node *np = dlist_addnode(item);
+	List_node *np = list_addnode(item);
 	if (np == NULL) {
 		return errno;
 	}
@@ -114,13 +114,13 @@ int dlist_prepend(Dlist *list, void *item)
 }
 
 
-int dlist_append(Dlist *list, void *item)
+int list_append(List *list, void *item)
 {
 	if (list == NULL) {
 		return EINVAL;
 	}
 
-	Dlist_node *np = dlist_addnode(item);
+	List_node *np = list_addnode(item);
 	if (np == NULL) {
 		return errno;
 	}
@@ -139,13 +139,13 @@ int dlist_append(Dlist *list, void *item)
 }
 
 
-int dlist_remove(Dlist *list, void *item)
+int list_remove(List *list, void *item)
 {
 	if (list == NULL) {
 		return EINVAL;
 	}
 
-	Dlist_node *np = NULL; // node pointer
+	List_node *np = NULL; // node pointer
 	if (list->head == NULL) {
 		// empty list
 		return EINVAL;
@@ -181,19 +181,19 @@ int dlist_remove(Dlist *list, void *item)
 	}
 
 	// item located, remove it
-	dlist_freenode(np);
+	list_freenode(np);
 	list->numitems--;
 	return 0;
 }
 
 
-void *dlist_pop(Dlist *list)
+void *list_pop(List *list)
 {
 	if (list == NULL || list->tail == NULL) {
 		return NULL;
 	}
 
-	Dlist_node *np = list->tail;
+	List_node *np = list->tail;
 	if (np->prev == NULL) {
 		list->head = NULL;
 	} else {
@@ -202,20 +202,20 @@ void *dlist_pop(Dlist *list)
 	list->tail = np->prev;
 
 	void *item = np->item;
-	dlist_freenode(np);
+	list_freenode(np);
 	list->numitems--;
 
 	return item;
 }
 
 
-void *dlist_shift(Dlist *list)
+void *list_shift(List *list)
 {
 	if (list == NULL || list->head == NULL) {
 		return NULL;
 	}
 
-	Dlist_node *np = list->head;
+	List_node *np = list->head;
 	if (np->next == NULL) {
 		list->tail = NULL;
 	} else {
@@ -224,14 +224,14 @@ void *dlist_shift(Dlist *list)
 	list->head = np->next;
 
 	void *item = np->item;
-	dlist_freenode(np);
+	list_freenode(np);
 	list->numitems--;
 
 	return item;
 }
 
 
-int dlist_size(Dlist *list)
+int list_size(List *list)
 {
 	if (list == NULL) {
 		return -EINVAL;
@@ -246,19 +246,19 @@ int dlist_size(Dlist *list)
  */
 
 
-struct Dlist_iterator {
-	Dlist_node	*next;
-	Dlist		*list;
+struct List_iterator {
+	List_node	*next;
+	List		*list;
 };
 
 
-Dlist_iterator *dlist_iterator_init(Dlist *list)
+List_iterator *list_iterator_init(List *list)
 {
 	if (list == NULL) {
 		return NULL;
 	}
 
-	Dlist_iterator *li = malloc(sizeof(*li));
+	List_iterator *li = malloc(sizeof(*li));
 	if (li == NULL) {
 		return NULL;
 	}
@@ -270,7 +270,7 @@ Dlist_iterator *dlist_iterator_init(Dlist *list)
 }
 
 
-int dlist_iterator_free(Dlist_iterator *li)
+int list_iterator_free(List_iterator *li)
 {
 	if (li == NULL) {
 		return EINVAL;
@@ -281,7 +281,7 @@ int dlist_iterator_free(Dlist_iterator *li)
 }
 
 
-void *dlist_iterator_next(Dlist_iterator *li)
+void *list_iterator_next(List_iterator *li)
 {
 	if (li == NULL) {
 		return NULL;
@@ -299,7 +299,7 @@ void *dlist_iterator_next(Dlist_iterator *li)
 }
 
 
-int dlist_iterator_reset(Dlist_iterator *li)
+int list_iterator_reset(List_iterator *li)
 {
 	if (li == NULL) {
 		return EINVAL;

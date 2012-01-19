@@ -1,4 +1,4 @@
-#include "../list.h"
+#include "../list.h" // might be another list implementation using the same bare interface
 #include "../unittest.h"
 #include <errno.h>
 #include <stdlib.h>
