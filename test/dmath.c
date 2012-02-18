@@ -123,20 +123,22 @@ void isprime_test(void)
 void logbi_uint_to_basestring_test(void)
 {
 	enum {
-		Nuint = 5,
+		Nuint = 6,
 	};
 
-	long long unsigned int n[Nuint] =	{16,	127,	128,	UINT_MAX,	ULONG_MAX};
-	int log2i_ans[Nuint] =				{5,		7,		8,		32,			64};
-	int base[Nuint] =					{3,		5,		7,		11,			36};
-	int logbi_ans[Nuint] =				{3,		4,		3,		10,			13};
-	char *uint_to_base_2_string_ans[Nuint] = {	"10000",
+	long long unsigned int n[Nuint] =	{0,		16,	127,	128,	UINT_MAX,	ULONG_MAX};
+	int log2i_ans[Nuint] =				{-EDOM, 4,	6,		7,		31,			63};
+	int base[Nuint] =					{3,		3,	5,		7,		11,			36};
+	int logbi_ans[Nuint] =				{-EDOM, 2,	3,		2,		9,			12};
+	char *uint_to_base_2_string_ans[Nuint] = {	"0",
+												"10000",
 												"1111111",
 												"10000000",
 												"11111111111111111111111111111111",
 												"1111111111111111111111111111111111111111111111111111111111111111"
 	};
-	char *uint_to_base_b_string_ans[Nuint] = {	"121",
+	char *uint_to_base_b_string_ans[Nuint] = {	"0",
+												"121",
 												"1002",
 												"242",
 												"1904440553",
@@ -151,10 +153,10 @@ void logbi_uint_to_basestring_test(void)
 		UNITTEST(logbi(n[i], base[i]) == logbi_ans[i]);
 
 		int len;
-		UNITTEST((len = uint_to_basestring(n[i], 2, bs)) == log2i_ans[i]);
+		UNITTEST((len = uint_to_basestring(n[i], 2, bs)) == (n[i] == 0 ? 1 : log2i_ans[i] + 1));
 		UNITTEST(strcmp(bs, uint_to_base_2_string_ans[i]) == 0);
 		
-		UNITTEST((len = uint_to_basestring(n[i], base[i], bs)) == logbi_ans[i]);
+		UNITTEST((len = uint_to_basestring(n[i], base[i], bs)) == (n[i] == 0 ? 1 : logbi_ans[i] + 1));
 		UNITTEST(strcmp(bs, uint_to_base_b_string_ans[i]) == 0);
 
 		char *bsp;
@@ -162,6 +164,9 @@ void logbi_uint_to_basestring_test(void)
 			UNITTEST(basestring_alphabet[basestring_char_to_int(*bsp)] == *bsp);
 		}
 	}
+
+	UNITTEST(uint_to_basestring(0, 1, bs) == -ERANGE);
+	UNITTEST(uint_to_basestring(0, 37, bs) == -ERANGE);
 }
 
 

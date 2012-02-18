@@ -32,8 +32,9 @@ int chinese_remainder(const int *a, const int *m, int neq);
 int isprime(long long unsigned int n);
 int isprime_cached(unsigned int n);
 
-/* integer operations to find the ceiling value of the base logaritm of n 
- * in this library it is used to compute the length needed for a conversion from n to a basestring */
+/* integer operations to find the floor value of the base logaritm of n 
+ * in this library it is used to compute the length-1 needed for a conversion from n to a basestring
+ * returns -EDOM if n == 0 */
 int logbi(long long unsigned int n, int base);
 
 /* convert the integer n into any base

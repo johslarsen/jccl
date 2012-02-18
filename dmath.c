@@ -244,8 +244,12 @@ int isprime_cached(unsigned int n)
 
 int logbi(long long unsigned int n, int base)
 {
+	if (n == 0) {
+		return -EDOM;
+	}
+
 	int i;
-	for (i = 0; n > 0; i++) {
+	for (i = -1; n > 0; i++) { // -1 compensates for checking down to 0
 		n /= base;
 	}
 
@@ -256,17 +260,23 @@ int logbi(long long unsigned int n, int base)
 const char *basestring_alphabet = "0123456789abcdefghijklmnopqrstuvwxyz";
 int uint_to_basestring(long long unsigned int n, int base, char *bs)
 {
-	if (base > 36) {
-		return -EDOM;
+	if (base < 2 || base > 36) {
+		return -ERANGE;
 	}
 
-	int i, len;
-	len = logbi(n, base);
-	for (i = len-1; n > 0; n /= base) {
+	if (n == 0) { // special case, normal algorithm does not work with 0
+		bs[0] = basestring_alphabet[0];
+		bs[1] = '\0';
+		return 1; // length of basestring
+	}
+
+	int i, max;
+	max = logbi(n, base);
+	for (i = max; n > 0; n /= base) {
 		bs[i--] = basestring_alphabet[n % base];
 	}
-	bs[len] = '\0';
-	return len;
+	bs[max+1] = '\0';
+	return max+1; // length of basestring
 }
 
 
