@@ -7,7 +7,7 @@
 #include <stdio.h>
 
 
-long long fibonacci(int n)
+long fibonacci(int n)
 {
 	if (n < 0) {
 		return -EDOM;
@@ -16,10 +16,11 @@ long long fibonacci(int n)
 	}
 
 	// start conditions
-	int x_0 = 0;
-	int x_1 = 1;
+	int x_0,x_1;
+	x_0 = 0;
+	x_1 = 1;
 
-	long long x_n, x_n1, x_n2; // recursion variables, x_n1, ... is the equivalent of x_{n-1} (LaTeX)
+	long x_n, x_n1, x_n2; // recursion variables, x_n1, ... is the equivalent of x_{n-1} (LaTeX)
 
 	if (n == 0) { 
 		return x_0;
@@ -62,13 +63,13 @@ int gcd(int a, int b)
 }
 
 
-long long lcm(int a, int b)
+long lcm(int a, int b)
 {
 	if (a == 0 || b == 0) {
 		return -EDOM;
 	}
 
-	long long res = ((long long)a*b)/gcd(a, b);
+	long res = ((long)a*b)/gcd(a, b);
 	if (res < 0) {
 		// lcm() is always positive
 		res *= -1;
@@ -178,13 +179,13 @@ error:
 }
 
 
-int isprime(long long unsigned int n)
+int isprime(long unsigned int n)
 {
 	if (n < 2) {
 		return 0;
 	}
 
-	long long unsigned int i, sqrtn = sqrt(n);
+	long unsigned int i, sqrtn = sqrt(n);
 	for (i = 2; i <= sqrtn; i++) {
 		if (n % i == 0) {
 			return 0;
@@ -242,7 +243,7 @@ int isprime_cached(unsigned int n)
 }
 
 
-int logbi(long long unsigned int n, int base)
+int logbi(long unsigned int n, int base)
 {
 	if (n == 0) {
 		return -EDOM;
@@ -258,7 +259,7 @@ int logbi(long long unsigned int n, int base)
 
 
 const char *basestring_alphabet = "0123456789abcdefghijklmnopqrstuvwxyz";
-int uint_to_basestring(long long unsigned int n, int base, char *bs)
+int uint_to_basestring(long unsigned int n, int base, char *bs)
 {
 	if (base < 2 || base > 36) {
 		return -ERANGE;
@@ -298,7 +299,7 @@ unsigned int modular_exponentiation(unsigned int b, unsigned int e, unsigned int
 		return -EDOM;
 	}
 
-	long long unsigned result = 1;
+	long unsigned result = 1;
 	while (e > 0) {
 		b = b % m;
 		if (e & 1) {
