@@ -4,12 +4,9 @@ CFLAGS  = -pipe
 CFLAGS += -g
 #CFLAGS += -p
 CFLAGS += -Wall
-#CFLAGS += -O2
-
-
 
 .PHONY: check
-check: dmath.test list.test dlist.test sort.test table.test stack.test
+check: dmath.test list.test sort.test table.test stack.test
 	for i in *.test; do echo "$$i:"; ./"$$i" 2>&1; done
 
 .PHONY: clean
@@ -20,8 +17,6 @@ clean:
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 list.test: list.o test/list.o unittest.o
-	$(CC) $(CFLAGS) $^ -o $@
-dlist.test: dlist.o test/list.o unittest.o
 	$(CC) $(CFLAGS) $^ -o $@
 dmath.test: dmath.o test/dmath.o unittest.o
 	$(CC) $(CFLAGS) $^ -o $@ -lm

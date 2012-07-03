@@ -5,267 +5,242 @@
 #include "list.h"
 
 
-/* Singel linked list implementation */
+/* Double linked list implementation */
 
-typedef struct List_node List_node;
-struct List_node {
-	List_node	*next;
-	void		*item;
+struct list_node {
+	struct list_node  *next, *previous;
+	void              *item;
 };
 
-struct List {
-	List_node 	*head;
-	int 		numitems;
+struct list {
+	struct list_node  *head;
+	struct list_node  *tail;
+	int               nitem;
 };
 
 
-List *list_init(void)
+struct list *list_init(void)
 {
-	List *list = malloc(sizeof(*list)); // new list
+	struct list *list = (struct list *) malloc(sizeof(*list));
 	if (list == NULL) {
 		return NULL;
 	}
 
 	list->head = NULL;
-	list->numitems = 0;
+	list->tail = NULL;
+	list->nitem = 0;
 
 	return list;
 }
 
 
-int list_free(List *list)
+void list_free(struct list *list)
 {
-	if (list == NULL) {
-		return EINVAL;
-	}
-
-	// remove each node
-	while (list_shift(list) != NULL) {
+	while (list_pop(list) != NULL) {
 		;
 	}
 
-	// remove the list
 	free(list);
-	return 0;
 }
 
 
-/*
- * Create a node.
- * Points to the original item.
- */
-static List_node *list_addnode(void *item)
+static struct list_node *list_addnode(struct list *list, void *item)
 {
-	List_node *node = malloc(sizeof(*node));
+	struct list_node *node = (struct list_node *) malloc(sizeof(*node));
 	if (node == NULL) {
 		return NULL;
 	}
 
 	node->next = NULL;
+	node->previous = NULL;
 	node->item = item;
+
+	list->nitem++;
 
 	return node;
 }
 
 
-/*
- * Frees the memory allocated by a node.
- * Item is preserved.
- */
-static int list_freenode(List_node *node)
+static void list_delnode(struct list *list, struct list_node *node)
 {
-	if (node == NULL) {
-		return EINVAL;
-	}
-
 	free(node);
-	return 0;
+	list->nitem--;
 }
 
 
-int list_prepend(List *list, void *item)
+int list_prepend(struct list *list, void *item)
 {
 	if (list == NULL) {
 		return EINVAL;
 	}
 
-	List_node *node = list_addnode(item);
-	if (node == NULL) {
+	struct list_node *np = list_addnode(list, item);
+	if (np == NULL) {
 		return errno;
 	}
 
-	node->next = list->head;
-	list->head = node;
-	list->numitems++;
+	np->next = list->head;
+	if (np->next == NULL) {
+		list->tail = np;
+	} else {
+		np->next->previous = np;
+	}
+
+	list->head = np;
 
 	return 0;
 }
 
 
-int list_append(List *list, void *item)
+int list_append(struct list *list, void *item)
 {
 	if (list == NULL) {
 		return EINVAL;
 	}
 
-	List_node *node = list_addnode(item);
-	if (node == NULL) {
+	struct list_node *np = list_addnode(list, item);
+	if (np == NULL) {
 		return errno;
 	}
 
+	np->previous = list->tail;
+	if (np->previous == NULL) {
+		list->head = np;
+	} else {
+		np->previous->next = np;
+	}
+
+	list->tail = np;
+
+	return 0;
+}
+
+
+int list_remove(struct list *list, void *item)
+{
+	if (list == NULL) {
+		return EINVAL;
+	}
+
+	struct list_node *np = NULL; // node pointer
 	if (list->head == NULL) {
 		// empty list
-		list->head = node;
-	} else {
-		// nonempty list
-		List_node *np = list->head; // node pointer
+		return EINVAL;
+	}
 
-		// traverse to last node
-		while(np->next != NULL) {
+	np = list->head;
+	if (list->head->item == item) {
+		list->head = np->next;
+		if (list->head == NULL) {
+			list->tail = NULL;
+		} else {
+			list->head->previous = NULL;
+		}
+	} else {
+		while (np != NULL && np->item != item) {
 			np = np->next;
 		}
-		np->next = node;
-	}
 
-	list->numitems++;
-
-	return 0;
-}
-
-
-int list_remove(List *list, void *item)
-{
-	if (list == NULL)
-		return EINVAL;
-
-	List_node *np = NULL; // node pointer
-	if (list->head == NULL) {
-		// empty list
-		return EINVAL;
-	}
-
-	if (list->head->item == item) {
-		// item at head of list
-		np = list->head;
-		list->head = np->next;
-	} else {
-		// locate item in list
-		List_node *pnp = list->head; // previous node pointer
-
-		// traverse list to find item
-		while (pnp->next != NULL && pnp->next->item != item) {
-			pnp = pnp->next;
-		}
-
-		if (pnp->next == NULL) {
+		if (np == NULL) {
 			//item not in list
 			return EINVAL;
 		}
 
-		np = pnp->next;
-		pnp->next = np->next;
+		np->previous->next = np->next;
+		if (np->next == NULL) {
+			list->tail = np->previous;
+		} else {
+			np->next->previous = np->previous;
+		}
 	}
 
-	// item located, remove it
-	list_freenode(np);
-	list->numitems--;
+	list_delnode(list, np);
 	return 0;
 }
 
 
-void *list_shift(List *list)
+void *list_pop(struct list *list)
+{
+	if (list == NULL || list->tail == NULL) {
+		return NULL;
+	}
+
+	struct list_node *np = list->tail;
+	if (np->previous == NULL) {
+		list->head = NULL;
+	} else {
+		np->previous->next = NULL;
+	}
+	list->tail = np->previous;
+
+	void *item = np->item;
+	list_delnode(list, np);
+
+	return item;
+}
+
+
+void *list_shift(struct list *list)
 {
 	if (list == NULL || list->head == NULL) {
 		return NULL;
 	}
 
-	List_node *np = list->head;
+	struct list_node *np = list->head;
+	if (np->next == NULL) {
+		list->tail = NULL;
+	} else {
+		np->next->previous = NULL;
+	}
 	list->head = np->next;
 
 	void *item = np->item;
-	list->numitems--;
-	list_freenode(np);
+	list_delnode(list, np);
 
 	return item;
 }
 
 
-void *list_pop(List *list)
+int list_size(struct list *list)
 {
-	if (list == NULL || list->head == NULL) {
-		return NULL;
-	}
-
-	List_node *np = list->head;
-	if (np->next == NULL) {
-		list->head = NULL;
-	} else {
-		while (np->next->next != NULL) {
-			// traverse to the end of the list
-			np = np->next;
-		}
-		List_node *pnp = np;
-		np = pnp->next;
-		pnp->next = NULL;
-	}
-
-	void *item = np->item;
-	list_freenode(np);
-	list->numitems--;
-
-	return item;
-}
-	
-
-int list_size(List *list)
-{
-	if (list == NULL) {
-		return -EINVAL;
-	}
-
-	return list->numitems;
+	return list == NULL ? -EINVAL : list->nitem;
 }
 
 
-/* Single linked list iterator implementation */
+/* Double linked list iterator implementation */
 
 
-struct List_iterator {
-	List_node	*next;
-	List		*list;
+struct list_iterator {
+	struct list_node  *next, *previous;
+	struct list       *list;
 };
 
 
-List_iterator *list_iterator_init(List *list)
+struct list_iterator *list_iterator_init(struct list *list)
 {
 	if (list == NULL) {
 		return NULL;
 	}
 
-	List_iterator *li = malloc(sizeof(*li));
+	struct list_iterator *li = (struct list_iterator *)malloc(sizeof(*li));
 	if (li == NULL) {
 		return NULL;
 	}
 
 	li->list = list;
-	li->next = list->head;
+	list_iterator_reset(li);
 
 	return li;
 }
 
 
-int list_iterator_free(List_iterator *li)
+void list_iterator_free(struct list_iterator *li)
 {
-	if (li == NULL) {
-		return EINVAL;
-	}
-
 	free(li);
-	return 0;
 }
 
 
-void *list_iterator_next(List_iterator *li)
+void *list_iterator_next(struct list_iterator *li)
 {
 	if (li == NULL) {
 		return NULL;
@@ -277,18 +252,40 @@ void *list_iterator_next(List_iterator *li)
 
 	void *item = li->next->item;
 
-	li->next = li->next->next; // progress the iterator
+	li->previous = li->next;
+	li->next = li->next->next;
 
 	return item;
 }
 
 
-int list_iterator_reset(List_iterator *li)
+void *list_iterator_previous(struct list_iterator *li)
+{
+	if (li == NULL) {
+		return NULL;
+	}
+
+	if (li->previous == NULL) {
+		return NULL;
+	}
+
+	void *item = li->previous->item;
+
+	li->next = li->previous;
+	li->previous = li->previous->previous;
+
+	return item;
+}
+
+
+
+int list_iterator_reset(struct list_iterator *li)
 {
 	if (li == NULL) {
 		return EINVAL;
 	}
 
 	li->next = li->list->head;
+	li->previous = li->list->tail;
 	return 0;
 }
