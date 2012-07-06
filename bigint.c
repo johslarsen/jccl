@@ -294,7 +294,7 @@ struct bigint *bigint_add(struct bigint *a, struct bigint *b)
 		carry = sum_of_msbs>>1;
 	}
 
-	res->chunks[i] = pad_chunks[carry];
+	res->chunks[i] = pad_chunks[bigint_msb(res, i-1)];
 
 	bigint_identify_pad_chunk_and_trim(res);
 	return res;

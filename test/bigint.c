@@ -96,9 +96,9 @@ void bigint_test_arithmetic_operators(void)
 		A_ADD_B,
 	};
 	const char *hexstrings[] = {
-		"7fffffffffffffff",
+		"00000000000000010000000000000000",
 		"ffffffffffffffff",
-		"0000000000000000fffffffffffffffe",
+		"0000000000000000ffffffffffffffff",
 	};
 
 	struct bigint *bns[NHEXSTRING];
@@ -109,7 +109,6 @@ void bigint_test_arithmetic_operators(void)
 	int i;
 	for (i = 0; i < NHEXSTRING; i++) {
 		char *res = bigint_to_msb_first_hexstring(bns[i]);
-		printf("%2d, i:%s\n    o:%s\n", i, hexstrings[i], res);
 		UNITTEST(strcmp(hexstrings[i], res) == 0);
 		free(res);
 		bigint_destroy(bns[i]);
