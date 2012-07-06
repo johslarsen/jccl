@@ -44,7 +44,7 @@ void bigint_test_creation_and_hexstring()
 void bigint_test_bitwise_operators(void)
 {
 	enum {
-		NHEXSTRING=1,
+		NHEXSTRING=7,
 	};
 
 	enum {                       A,
@@ -53,57 +53,73 @@ void bigint_test_bitwise_operators(void)
 	                             NOT_B,
 	                             A_AND_B,
 	                             A_OR_B,
-	                             A_XOR_B};
-	const char *hexstrings[7] = {"0000000000007fff0000000000007fff",
-	                                             "ffffffffffff1337",
-	                             "ffffffffffff8000ffffffffffff8000",
-	                                             "000000000000ecc8",
-	                             "0000000000007fff0000000000001337",
-	                                             "ffffffffffff7fff",
-	                             "ffffffffffff8000ffffffffffff6cc8"};
+	                             A_XOR_B,
+	};
+	const char *hexstrings[] = {
+		"0000000000007fff0000000000007fff",
+		                "ffffffffffff1337",
+		"ffffffffffff8000ffffffffffff8000",
+		                "000000000000ecc8",
+		"0000000000007fff0000000000001337",
+		                "ffffffffffff7fff",
+		"ffffffffffff8000ffffffffffff6cc8",
+	};
 
-	struct bigint *a = bigint_from_msb_first_hexstring(hexstrings[A], 0);
-	struct bigint *b = bigint_from_msb_first_hexstring(hexstrings[B], 0);
-	struct bigint *not_a = bigint_not(a);
-	struct bigint *not_b = bigint_not(b);
-	struct bigint *a_and_b = bigint_and(a, b);
-	struct bigint *a_or_b = bigint_or(a, b);
-	struct bigint *a_xor_b = bigint_xor(a, b);
-
-	char *res[7];
-	res[A] = bigint_to_msb_first_hexstring(a);
-	res[B] = bigint_to_msb_first_hexstring(b);
-	res[NOT_A] = bigint_to_msb_first_hexstring(not_a);
-	res[NOT_B] = bigint_to_msb_first_hexstring(not_b);
-	res[A_AND_B] = bigint_to_msb_first_hexstring(a_and_b);
-	res[A_OR_B] = bigint_to_msb_first_hexstring(a_or_b);
-	res[A_XOR_B] = bigint_to_msb_first_hexstring(a_xor_b);
-
-	UNITTEST(strcmp(hexstrings[A], res[A]) == 0);
-	UNITTEST(strcmp(hexstrings[B], res[B]) == 0);
-	UNITTEST(strcmp(hexstrings[NOT_A], res[NOT_A]) == 0);
-	UNITTEST(strcmp(hexstrings[NOT_B], res[NOT_B]) == 0);
-	UNITTEST(strcmp(hexstrings[A_AND_B], res[A_AND_B]) == 0);
-	UNITTEST(strcmp(hexstrings[A_OR_B], res[A_OR_B]) == 0);
-	UNITTEST(strcmp(hexstrings[A_XOR_B], res[A_XOR_B]) == 0);
+	struct bigint *bns[NHEXSTRING];
+	bns[A] = bigint_from_msb_first_hexstring(hexstrings[A], 0);
+	bns[B] = bigint_from_msb_first_hexstring(hexstrings[B], 0);
+	bns[NOT_A] = bigint_not(bns[A]);
+	bns[NOT_B] = bigint_not(bns[B]);
+	bns[A_AND_B] = bigint_and(bns[A], bns[B]);
+	bns[A_OR_B] = bigint_or(bns[A], bns[B]);
+	bns[A_XOR_B] = bigint_xor(bns[A], bns[B]);
 
 	int i;
-	for (i = 0; i < 7; i++) {
-		free(res[i]);
+	for (i = 0; i < NHEXSTRING; i++) {
+		char *res = bigint_to_msb_first_hexstring(bns[i]);
+		UNITTEST(strcmp(hexstrings[i], res) == 0);
+		free(res);
+		bigint_destroy(bns[i]);
 	}
+}
 
-	bigint_destroy(a);
-	bigint_destroy(b);
-	bigint_destroy(not_a);
-	bigint_destroy(not_b);
-	bigint_destroy(a_and_b);
-	bigint_destroy(a_or_b);
-	bigint_destroy(a_xor_b);
+
+void bigint_test_arithmetic_operators(void)
+{
+	enum {
+		NHEXSTRING = 3,
+	};
+
+	enum {
+		A,
+		B,
+		A_ADD_B,
+	};
+	const char *hexstrings[] = {
+		"7fffffffffffffff",
+		"ffffffffffffffff",
+		"0000000000000000fffffffffffffffe",
+	};
+
+	struct bigint *bns[NHEXSTRING];
+	bns[A] = bigint_from_msb_first_hexstring(hexstrings[A], 0);
+	bns[B] = bigint_from_msb_first_hexstring(hexstrings[B], 0);
+	bns[A_ADD_B] = bigint_add(bns[A], bns[B]);
+
+	int i;
+	for (i = 0; i < NHEXSTRING; i++) {
+		char *res = bigint_to_msb_first_hexstring(bns[i]);
+		printf("%2d, i:%s\n    o:%s\n", i, hexstrings[i], res);
+		UNITTEST(strcmp(hexstrings[i], res) == 0);
+		free(res);
+		bigint_destroy(bns[i]);
+	}
 }
 
 int main(void)
 {
 	bigint_test_creation_and_hexstring();
 	bigint_test_bitwise_operators();
+	bigint_test_arithmetic_operators();
 	return 0;
 }

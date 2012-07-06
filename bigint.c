@@ -45,16 +45,17 @@ static struct bigint *bigint_init(int nchunk)
 }
 
 
-static int bigint_msb(struct bigint *n, int i)
-{
-	return n->chunks[ i < 0 ? n->nchunk-1 : i ] >> LONG_MSB;
-}
-
-
 static unsigned long bigint_index_with_padding(struct bigint *n, int i)
 {
 	return i < n->nchunk ? n->chunks[i] : n->pad_chunk;
 }
+
+
+static int bigint_msb(struct bigint *n, int i)
+{
+	return bigint_index_with_padding(n, i < 0 ? n->nchunk-1 : i) >> LONG_MSB;
+}
+
 
 void bigint_destroy(struct bigint *n)
 {
@@ -268,6 +269,32 @@ struct bigint *bigint_xor(struct bigint *a, struct bigint *b)
 	for (i = 0; i < maxchunks; i++) {
 		res->chunks[i] = bigint_index_with_padding(a, i) ^ bigint_index_with_padding(b, i);
 	}
+
+	bigint_identify_pad_chunk_and_trim(res);
+	return res;
+}
+
+
+struct bigint *bigint_add(struct bigint *a, struct bigint *b)
+{
+	if (a == NULL || b == NULL) {
+		return NULL;
+	}
+
+	int maxchunk = a->nchunk > b->nchunk ? a->nchunk : b->nchunk;
+	struct bigint *res = bigint_init(maxchunk+1);
+
+	int i, carry = 0;
+	for (i = 0; i < maxchunk; i++) {
+		unsigned long sum_of_all_but_msbs = (bigint_index_with_padding(a, i) & ~LONG_MSB_MASK) + (bigint_index_with_padding(b, i) & ~LONG_MSB_MASK) + carry;
+
+		unsigned long sum_of_msbs = bigint_msb(a, i) + bigint_msb(b, i) + (sum_of_all_but_msbs>>LONG_MSB);
+
+		res->chunks[i] = (sum_of_all_but_msbs & ~LONG_MSB_MASK) | sum_of_msbs<<LONG_MSB;
+		carry = sum_of_msbs>>1;
+	}
+
+	res->chunks[i] = pad_chunks[carry];
 
 	bigint_identify_pad_chunk_and_trim(res);
 	return res;
