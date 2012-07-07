@@ -8,7 +8,9 @@ enum {
 	NIBBLE_BIT = 4,
 	NIBBLE_MASK = (1<<4)-1,
 
+#ifndef LONG_BIT
 	LONG_BIT = sizeof(long) * CHAR_BIT,
+#endif /* LONG_BIT */
 	NNIBBLE_IN_LONG = LONG_BIT/NIBBLE_BIT,
 
 	LONG_MSB = LONG_BIT-1,
