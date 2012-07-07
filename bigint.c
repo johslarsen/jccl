@@ -284,19 +284,19 @@ struct bigint *bigint_add(struct bigint *a, struct bigint *b)
 	}
 
 	int maxchunk = a->nchunk > b->nchunk ? a->nchunk : b->nchunk;
-	struct bigint *res = bigint_init(maxchunk+1);
+	struct bigint *res = bigint_init(maxchunk);
+	if (res == NULL) {
+		return NULL;
+	}
 
 	int i, carry = 0;
 	for (i = 0; i < maxchunk; i++) {
 		unsigned long sum_of_all_but_msbs = (bigint_index_with_padding(a, i) & ~LONG_MSB_MASK) + (bigint_index_with_padding(b, i) & ~LONG_MSB_MASK) + carry;
-
 		unsigned long sum_of_msbs = bigint_msb(a, i) + bigint_msb(b, i) + (sum_of_all_but_msbs>>LONG_MSB);
 
 		res->chunks[i] = (sum_of_all_but_msbs & ~LONG_MSB_MASK) | sum_of_msbs<<LONG_MSB;
 		carry = sum_of_msbs>>1;
 	}
-
-	res->chunks[i] = pad_chunks[bigint_msb(res, i-1)];
 
 	bigint_identify_pad_chunk_and_trim(res);
 	return res;
