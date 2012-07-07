@@ -190,6 +190,36 @@ char *bigint_to_msb_first_hexstring(struct bigint *n)
 }
 
 
+int bigint_compare(struct bigint *a, struct bigint *b) {
+	if (a == NULL) {
+		return b == NULL ? 0 : -1;
+	} else if (b == NULL) {
+		return a == NULL ? 0 : 1;
+	}
+
+	int a_msb = bigint_msb(a, -1);
+	int b_msb = bigint_msb(b, -1);
+
+	if (a_msb != b_msb) {
+		return a_msb == 1 ? -1 : 1;
+	}
+
+	if (a->nchunk != b->nchunk) {
+		int abs_res = a->nchunk > b->nchunk ? 1 : -1;
+		return a_msb == 1 ? -abs_res : abs_res;
+	}
+
+	int i;
+	for (i = a->nchunk-1; i >= 0; i--) {
+		if (a->chunks[i] != b->chunks[i]) {
+			return a->chunks[i] > b->chunks[i] ? 1 : -1;
+		}
+	}
+
+	return 0;
+}
+
+
 struct bigint *bigint_not(struct bigint *n)
 {
 	if (n == NULL) {

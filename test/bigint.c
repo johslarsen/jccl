@@ -175,11 +175,57 @@ void bigint_test_arithmetic_operators(void)
 	}
 }
 
+
+void bigint_test_compare(void)
+{
+	enum {
+		NBNS = 4,
+		NCOMPARE = 16,
+	};
+
+	enum {
+		A,
+		B,
+		MINUS_B,
+		MINUS_A,
+	};
+	struct bigint *bns[4];
+	bns[A] = bigint_from_msb_first_hexstring("10000000000000001", 0);
+	bns[B] = bigint_from_msb_first_hexstring("10000000000000000", 0);
+	bns[MINUS_B] = bigint_negate(bns[B]);
+	bns[MINUS_A] = bigint_negate(bns[A]);
+
+	int compare[NBNS][NBNS] = {
+		{0,  1,  1,  1},
+		{-1, 0,  1,  1},
+		{-1, -1, 0,  1},
+		{-1, -1, -1, 0}
+	};
+
+	int i;
+	for (i = 0; i < NBNS; i++) {
+		int j;
+		for(j = 0; j < NBNS; j++) {
+			UNITTEST(bigint_compare(bns[i], bns[j]) == compare[i][j]);
+		}
+	}
+
+	UNITTEST(bigint_compare(NULL, NULL) == 0);
+	UNITTEST(bigint_compare(bns[0], NULL) == 1);
+	UNITTEST(bigint_compare(NULL, bns[0]) == -1);
+
+	for (i = 0; i < NBNS; i++) {
+		bigint_destroy(bns[i]);
+	}
+}
+
+
 int main(void)
 {
 	bigint_test_creation_and_hexstring();
 	bigint_test_bitwise_operators();
 	bigint_test_bitshift();
 	bigint_test_arithmetic_operators();
+	bigint_test_compare();
 	return 0;
 }
