@@ -47,13 +47,14 @@ void bigint_test_bitwise_operators(void)
 		NHEXSTRING=7,
 	};
 
-	enum {                       A,
-	                             B,
-	                             NOT_A,
-	                             NOT_B,
-	                             A_AND_B,
-	                             A_OR_B,
-	                             A_XOR_B,
+	enum {
+		A,
+		B,
+		NOT_A,
+		NOT_B,
+		A_AND_B,
+		A_OR_B,
+		A_XOR_B,
 	};
 	const char *hexstrings[] = {
 		"0000000000007fff0000000000007fff",
@@ -87,24 +88,33 @@ void bigint_test_bitwise_operators(void)
 void bigint_test_arithmetic_operators(void)
 {
 	enum {
-		NHEXSTRING = 3,
+		NHEXSTRING = 6,
 	};
 
 	enum {
 		A,
 		B,
+		MINUS_A,
+		MINUS_B,
 		A_ADD_B,
+		A_MINUS_B,
 	};
 	const char *hexstrings[] = {
 		"00000000000000010000000000000000",
 		"ffffffffffffffff",
+		"ffffffffffffffff0000000000000000",
+		"0000000000000001",
 		"0000000000000000ffffffffffffffff",
+		"00000000000000010000000000000001",
 	};
 
 	struct bigint *bns[NHEXSTRING];
 	bns[A] = bigint_from_msb_first_hexstring(hexstrings[A], 0);
 	bns[B] = bigint_from_msb_first_hexstring(hexstrings[B], 0);
+	bns[MINUS_A] = bigint_negate(bns[A]);
+	bns[MINUS_B] = bigint_negate(bns[B]);
 	bns[A_ADD_B] = bigint_add(bns[A], bns[B]);
+	bns[A_MINUS_B] = bigint_subtract(bns[A], bns[B]);
 
 	int i;
 	for (i = 0; i < NHEXSTRING; i++) {

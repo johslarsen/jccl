@@ -19,6 +19,8 @@ struct bigint *bigint_xor(struct bigint *a, struct bigint *b); // a^b
 //struct bigint *bigint_shift_left(struct bigint *a, struct bigint *b); // a<<b
 //struct bigint *bigint_shift_right(struct bigint *a, struct bigint *b); // a>>b
 
+struct bigint *bigint_negate(struct bigint *n); // -n
 struct bigint *bigint_add(struct bigint *a, struct bigint *b); // a+b
+struct bigint *bigint_subtract(struct bigint *a, struct bigint *b); // a+b
 
 #endif /*BIGINT_H_*/

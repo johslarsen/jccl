@@ -277,6 +277,32 @@ struct bigint *bigint_xor(struct bigint *a, struct bigint *b)
 }
 
 
+struct bigint *bigint_negate(struct bigint *n) {
+	if (n == NULL) {
+		return NULL;
+	}
+
+	struct bigint *bn_one = NULL, *not_n = NULL, *minus_n = NULL;
+
+	bn_one = bigint_from_long(1);
+	if (bn_one == NULL) {
+		goto cleanup;
+	}
+
+	not_n = bigint_not(n);
+	if (not_n == NULL) {
+		goto cleanup;
+	}
+
+	minus_n = bigint_add(not_n, bn_one);
+
+cleanup:
+	bigint_destroy(not_n);
+	bigint_destroy(bn_one);
+	return minus_n;
+}
+
+
 struct bigint *bigint_add(struct bigint *a, struct bigint *b)
 {
 	if (a == NULL || b == NULL) {
@@ -300,4 +326,22 @@ struct bigint *bigint_add(struct bigint *a, struct bigint *b)
 
 	bigint_identify_pad_chunk_and_trim(res);
 	return res;
+}
+
+
+struct bigint *bigint_subtract(struct bigint *a, struct bigint *b)
+{
+	if (a == NULL || b == NULL) {
+		return NULL;
+	}
+
+	struct bigint *minus_b = bigint_negate(b);
+	if (minus_b == NULL) {
+		return NULL;
+	}
+
+	struct bigint *a_minus_b = bigint_add(a, minus_b);
+
+	bigint_destroy(minus_b);
+	return a_minus_b;
 }
