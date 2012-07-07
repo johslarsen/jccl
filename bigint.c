@@ -277,6 +277,85 @@ struct bigint *bigint_xor(struct bigint *a, struct bigint *b)
 }
 
 
+struct bigint *bigint_shift_left(struct bigint *a, struct bigint *b)
+{
+	if (a == NULL || b == NULL) {
+		return NULL;
+	}
+
+	if (bigint_msb(b, -1) == 1) {
+		struct bigint *minus_b = bigint_negate(b);
+		struct bigint *right_shifted_a = bigint_shift_right(a, minus_b);
+
+		bigint_destroy(minus_b);
+		return right_shifted_a;
+	}
+
+	if (b->nchunk > 1) {
+		return NULL; // left shift with more than ULONG_MAX would in most cases result in out of memory, so do not try
+	}
+
+	int npre_chunks = b->chunks[0]/LONG_BIT;
+	int non_chunk_shift = b->chunks[0]%LONG_BIT;
+
+	struct bigint *res = bigint_init(a->nchunk+npre_chunks + (non_chunk_shift != 0));
+	if (res == NULL) {
+		return NULL;
+	}
+
+	unsigned long carry = 0;
+	int i;
+	for (i = 0; i < a->nchunk; i++) {
+		res->chunks[npre_chunks + i] = (a->chunks[i]<<non_chunk_shift) | carry;
+		carry = a->chunks[i] >> (LONG_BIT-non_chunk_shift);
+	}
+	res->chunks[npre_chunks+a->nchunk] = carry | (a->pad_chunk<<non_chunk_shift);
+
+	bigint_identify_pad_chunk_and_trim(res);
+	return res;
+}
+
+
+struct bigint *bigint_shift_right(struct bigint *a, struct bigint *b)
+{
+	if (a == NULL || b == NULL) {
+		return NULL;
+	}
+
+	if (bigint_msb(b, -1) == 1) {
+		struct bigint *minus_b = bigint_negate(b);
+		struct bigint *left_shfted_a = bigint_shift_left(a, minus_b);
+
+		bigint_destroy(minus_b);
+		return left_shfted_a;
+	}
+
+	int removed_chunks = b->chunks[0]/LONG_BIT;
+	int non_chunk_shift = b->chunks[0]%LONG_BIT;
+
+	int shift_more_than_a = removed_chunks >= a->nchunk;
+
+	struct bigint *res = bigint_init(shift_more_than_a ? 1 : a->nchunk-removed_chunks);
+	if (res == NULL) {
+		return NULL;
+	}
+
+	if (shift_more_than_a) {
+		res->chunks[0] = a->pad_chunk;
+	} else {
+		int i;
+		unsigned long carry = a->pad_chunk << (LONG_BIT-non_chunk_shift);
+		for (i = a->nchunk-1; i >= removed_chunks; i--) {
+			res->chunks[i-removed_chunks] = (a->chunks[i]>>non_chunk_shift) | carry;
+			carry = a->chunks[i]<<(LONG_BIT-non_chunk_shift);
+		}
+	}
+
+	bigint_identify_pad_chunk_and_trim(res);
+	return res;
+}
+
+
 struct bigint *bigint_negate(struct bigint *n) {
 	if (n == NULL) {
 		return NULL;

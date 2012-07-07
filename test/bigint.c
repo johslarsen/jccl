@@ -85,6 +85,56 @@ void bigint_test_bitwise_operators(void)
 }
 
 
+void bigint_test_bitshift(void)
+{
+	enum {
+		NHEXSTRING = 9,
+	};
+
+	enum {
+		A,
+		B,
+		MINUS_B,
+		A_LEFT_SHIFT_B,
+		A_RIGHT_SHIFT_MINUS_B,
+		A_RIGHT_SHIFT_B,
+		A_LEFT_SHIFT_MINUS_B,
+		C,
+		C_RIGHT_SHIFT_B,
+	};
+	const char *hexstrings[] = {
+		"bfffffffffffefffffffffffffffefff",
+		"0000000000000043",
+		"ffffffffffffffbd",
+		"fffffffffffffffdffffffffffff7fffffffffffffff7ff80000000000000000",
+		"fffffffffffffffdffffffffffff7fffffffffffffff7ff80000000000000000",
+		"f7fffffffffffdff",
+		"f7fffffffffffdff",
+		"8fffffffffffffff",
+		"ffffffffffffffff",
+	};
+
+	struct bigint *bns[NHEXSTRING];
+	bns[A] = bigint_from_msb_first_hexstring(hexstrings[A],0);
+	bns[B] = bigint_from_msb_first_hexstring(hexstrings[B],0);
+	bns[MINUS_B] = bigint_negate(bns[B]);
+	bns[A_LEFT_SHIFT_B] = bigint_shift_left(bns[A], bns[B]);
+	bns[A_RIGHT_SHIFT_MINUS_B] = bigint_shift_right(bns[A], bns[MINUS_B]);
+	bns[A_RIGHT_SHIFT_B] = bigint_shift_right(bns[A], bns[B]);
+	bns[A_LEFT_SHIFT_MINUS_B] = bigint_shift_left(bns[A], bns[MINUS_B]);
+	bns[C] = bigint_from_msb_first_hexstring(hexstrings[C], 0);
+	bns[C_RIGHT_SHIFT_B] = bigint_shift_right(bns[C], bns[B]);
+
+	int i;
+	for (i = 0; i < NHEXSTRING; i++) {
+		char *res = bigint_to_msb_first_hexstring(bns[i]);
+		UNITTEST(strcmp(hexstrings[i], res) == 0);
+		free(res);
+		bigint_destroy(bns[i]);
+	}
+}
+
+
 void bigint_test_arithmetic_operators(void)
 {
 	enum {
@@ -129,6 +179,7 @@ int main(void)
 {
 	bigint_test_creation_and_hexstring();
 	bigint_test_bitwise_operators();
+	bigint_test_bitshift();
 	bigint_test_arithmetic_operators();
 	return 0;
 }
