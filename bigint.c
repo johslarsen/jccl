@@ -1,3 +1,4 @@
+#include <errno.h>
 #include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -110,6 +111,18 @@ struct bigint *bigint_from_long(unsigned long n)
 
 	bigint_identify_pad_chunk_and_trim(bigint);
 	return bigint;
+}
+
+
+int bigint_to_long(struct bigint *n, unsigned long *result)
+{
+	if (n == NULL || result == NULL) {
+		return EINVAL;
+	}
+
+	*result = n->chunks[0];
+
+	return n->nchunk > 1 ? ERANGE : 0;
 }
 
 

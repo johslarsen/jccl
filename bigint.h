@@ -8,8 +8,11 @@ extern const char *bigint_hex_charset;
 void bigint_destroy(struct bigint *n);
 
 struct bigint *bigint_from_long(unsigned long n);
+int bigint_to_long(struct bigint *n, unsigned long *result);
+
 struct bigint *bigint_from_msb_first_hexstring(const char *s, int nchar);
 char *bigint_to_msb_first_hexstring(struct bigint *n);
+
 int bigint_compare(struct bigint *a, struct bigint *b);
 
 struct bigint *bigint_not(struct bigint *n); // ~n

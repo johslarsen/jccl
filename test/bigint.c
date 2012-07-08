@@ -1,14 +1,21 @@
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "../bigint.h"
 #include "../unittest.h"
 
-void bigint_test_creation_and_hexstring()
+void bigint_test_conversion()
 {
+	unsigned long somelong;
+	struct bigint *somebn;
+
+	UNITTEST(bigint_to_msb_first_hexstring(NULL) == NULL);
 	UNITTEST(bigint_from_msb_first_hexstring(NULL, 0) == NULL);
 	UNITTEST(bigint_from_msb_first_hexstring(NULL, 1337) == NULL);
-	UNITTEST(bigint_to_msb_first_hexstring(NULL) == NULL);
+	UNITTEST(bigint_to_long(NULL, NULL) == EINVAL);
+	UNITTEST(bigint_to_long(NULL, &somelong) == EINVAL);
+	UNITTEST(bigint_to_long(somebn, NULL) == EINVAL);
 
 	const unsigned long n_uint = (1UL<<31) - 1;
 	const char const *n_hexstring =          "000000007fffffff";
@@ -22,6 +29,10 @@ void bigint_test_creation_and_hexstring()
 	for (i = 0; i < 3; i++) {
 		char *res = bigint_to_msb_first_hexstring(bns[i]);
 		UNITTEST(strcmp(res, n_hexstring) == 0);
+
+		unsigned long lres;
+		UNITTEST(bigint_to_long(bns[i], &lres) == 0);
+		UNITTEST(lres == n_uint);
 		free (res);
 		bigint_destroy(bns[i]);
 	}
@@ -35,6 +46,9 @@ void bigint_test_creation_and_hexstring()
 	for (i = 0; i < 2; i++) {
 		char *res = bigint_to_msb_first_hexstring(bns[i]);
 		UNITTEST(strcmp(res, multi_long_hexstring_res) == 0);
+
+		unsigned long lres;
+		UNITTEST(bigint_to_long(bns[i], &lres) == ERANGE);
 		free(res);
 		bigint_destroy(bns[i]);
 	}
@@ -222,7 +236,7 @@ void bigint_test_compare(void)
 
 int main(void)
 {
-	bigint_test_creation_and_hexstring();
+	bigint_test_conversion();
 	bigint_test_bitwise_operators();
 	bigint_test_bitshift();
 	bigint_test_arithmetic_operators();
