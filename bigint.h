@@ -6,6 +6,7 @@ struct bigint;
 extern const char *bigint_hex_charset;
 
 void bigint_destroy(struct bigint *n);
+struct bigint *bigint_copy(struct bigint *n);
 
 struct bigint *bigint_from_long(unsigned long n);
 int bigint_to_long(struct bigint *n, unsigned long *result);
@@ -24,6 +25,8 @@ struct bigint *bigint_shift_left(struct bigint *a, struct bigint *b); // a<<b
 struct bigint *bigint_shift_right(struct bigint *a, struct bigint *b); // a>>b
 
 struct bigint *bigint_negate(struct bigint *n); // -n
+struct bigint *bigint_abs(struct bigint *n); // |n|
+
 struct bigint *bigint_add(struct bigint *a, struct bigint *b); // a+b
 struct bigint *bigint_subtract(struct bigint *a, struct bigint *b); // a+b
 

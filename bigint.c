@@ -69,6 +69,23 @@ void bigint_destroy(struct bigint *n)
 }
 
 
+struct bigint *bigint_copy(struct bigint *n) {
+	if (n == NULL) {
+		return NULL;
+	}
+
+	struct bigint *res = bigint_init(n->nchunk);
+	if (res == NULL) {
+		return NULL;
+	}
+
+	res->pad_chunk = n->pad_chunk;
+	memmove(res->chunks, n->chunks, n->nchunk*sizeof(*n->chunks));
+
+	return res;
+}
+
+
 static void bigint_identify_pad_chunk_and_trim(struct bigint *n)
 {
 	if (n == NULL) {
@@ -422,6 +439,15 @@ cleanup:
 	bigint_destroy(not_n);
 	bigint_destroy(bn_one);
 	return minus_n;
+}
+
+
+struct bigint *bigint_abs(struct bigint *n) {
+	if (n == NULL) {
+		return NULL;
+	}
+
+	return bigint_msb(n, -1) == 1 ? bigint_negate(n) : bigint_copy(n);
 }
 
 

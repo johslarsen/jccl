@@ -152,7 +152,7 @@ void bigint_test_bitshift(void)
 void bigint_test_arithmetic_operators(void)
 {
 	enum {
-		NHEXSTRING = 6,
+		NHEXSTRING = 10,
 	};
 
 	enum {
@@ -160,6 +160,10 @@ void bigint_test_arithmetic_operators(void)
 		B,
 		MINUS_A,
 		MINUS_B,
+		ABS_A,
+		ABS_MINUS_A,
+		ABS_B,
+		ABS_MINUS_B,
 		A_ADD_B,
 		A_MINUS_B,
 	};
@@ -167,6 +171,10 @@ void bigint_test_arithmetic_operators(void)
 		"00000000000000010000000000000000",
 		"ffffffffffffffff",
 		"ffffffffffffffff0000000000000000",
+		"0000000000000001",
+		"00000000000000010000000000000000",
+		"00000000000000010000000000000000",
+		"0000000000000001",
 		"0000000000000001",
 		"0000000000000000ffffffffffffffff",
 		"00000000000000010000000000000001",
@@ -177,6 +185,10 @@ void bigint_test_arithmetic_operators(void)
 	bns[B] = bigint_from_msb_first_hexstring(hexstrings[B], 0);
 	bns[MINUS_A] = bigint_negate(bns[A]);
 	bns[MINUS_B] = bigint_negate(bns[B]);
+	bns[ABS_A] = bigint_abs(bns[A]);
+	bns[ABS_MINUS_A] = bigint_abs(bns[MINUS_A]);
+	bns[ABS_B] = bigint_abs(bns[B]);
+	bns[ABS_MINUS_B] = bigint_abs(bns[MINUS_B]);
 	bns[A_ADD_B] = bigint_add(bns[A], bns[B]);
 	bns[A_MINUS_B] = bigint_subtract(bns[A], bns[B]);
 
@@ -190,7 +202,7 @@ void bigint_test_arithmetic_operators(void)
 }
 
 
-void bigint_test_compare(void)
+void bigint_test_compare_and_copy(void)
 {
 	enum {
 		NBNS = 4,
@@ -222,6 +234,10 @@ void bigint_test_compare(void)
 		for(j = 0; j < NBNS; j++) {
 			UNITTEST(bigint_compare(bns[i], bns[j]) == compare[i][j]);
 		}
+
+		struct bigint *duplicate = bigint_copy(bns[i]);
+		UNITTEST(bigint_compare(bns[i], duplicate) == 0);
+		bigint_destroy(duplicate);
 	}
 
 	UNITTEST(bigint_compare(NULL, NULL) == 0);
@@ -240,6 +256,6 @@ int main(void)
 	bigint_test_bitwise_operators();
 	bigint_test_bitshift();
 	bigint_test_arithmetic_operators();
-	bigint_test_compare();
+	bigint_test_compare_and_copy();
 	return 0;
 }
