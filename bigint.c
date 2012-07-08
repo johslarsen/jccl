@@ -37,7 +37,7 @@ static struct bigint *bigint_init(int nchunk)
 	}
 
 	n->nchunk = nchunk;
-	n->chunks = (unsigned long *)calloc(sizeof(long), nchunk);
+	n->chunks = (unsigned long *)calloc(sizeof(*n->chunks), nchunk);
 	if (n->chunks == NULL) {
 		bigint_destroy(n);
 		return NULL;
@@ -91,7 +91,7 @@ static void bigint_identify_pad_chunk_and_trim(struct bigint *n)
 	int new_nchunk = i+1;
 	if (new_nchunk != n->nchunk) {
 		n->nchunk = new_nchunk;
-		unsigned long *new_chunks = (unsigned long *)realloc(n->chunks, n->nchunk);
+		unsigned long *new_chunks = (unsigned long *)realloc(n->chunks, sizeof(*new_chunks)*n->nchunk);
 		if (new_chunks != NULL) {
 			n->chunks = new_chunks;
 		}
