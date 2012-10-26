@@ -1,0 +1,3 @@
+[submodule "CuTest"]
+	path = CuTest
+	url = repos:/home/git/johs/CuTest
