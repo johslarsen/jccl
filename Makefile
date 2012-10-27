@@ -1,28 +1,36 @@
-CC		= gcc
+CC             := gcc
+CFLAGS         := -pipe -g -p -Wall
 
-CFLAGS  = -pipe
-CFLAGS += -g
-#CFLAGS += -p
-CFLAGS += -Wall
+RM             := rm -f
 
-.PHONY: check
-check: bigint.test dmath.test list.test sort.test table.test
-	for i in *.test; do echo "$$i:"; ./"$$i" 2>&1; done
+LIBS           := -lm
+
+CUTEST_SRC     := CuTest/CuTest.c
+TEST_SUITE     := AllTests
+TEST_SUITE_SRC := $(TEST_SUITE).c
+
+HEADERS        := $(wildcard *.h)
+SOURCES        := $(wildcard *.c) $(CUTEST_SRC) $(TEST_SUITE_SRC)
+OBJECTS        := $(patsubst %.c, %.o, $(SOURCES))
+
+TEST_SUITE_GENERATOR := CuTest/make-tests.sh
 
 .PHONY: clean
-clean:
-	\rm -f *.o test/*.o *.test
+
+all: test
+test: $(TEST_SUITE)
+	./$<
 
 %.o: %.c
-	$(CC) $(CFLAGS) -c -o $@ $<
+	$(CC) $(CFLAGS) -c $< -o $@
 
-bigint.test: bigint.o test/bigint.o unittest.o
-	$(CC) $(CFLAGS) $^ -o $@
-list.test: list.o test/list.o unittest.o
-	$(CC) $(CFLAGS) $^ -o $@
-dmath.test: dmath.o test/dmath.o unittest.o
-	$(CC) $(CFLAGS) $^ -o $@ -lm
-sort.test: sort.o test/sort.o unittest.o
-	$(CC) $(CFLAGS) $^ -o $@
-table.test: table.o test/table.o unittest.o
-	$(CC) $(CFLAGS) $^ -o $@ -lm
+$(TEST_SUITE_SRC):
+	$(TEST_SUITE_GENERATOR) > $@
+
+$(TEST_SUITE): $(OBJECTS) $(HEADERS)
+	$(CC) $(CFLAGS) $^ -o $@ $(LIBS)
+	$(RM) $(TEST_SUITE_SRC)
+
+clean:
+	$(RM) $(TEST_SUITE) $(TEST_SUITE_SRC) $(OBJECTS)
+

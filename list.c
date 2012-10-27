@@ -1,21 +1,22 @@
+#include "CuTest/CuTest.h"
+#include "list.h"
 #include <assert.h>
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "list.h"
 
 
 /* Double linked list implementation */
 
 struct list_node {
 	struct list_node  *next, *previous;
-	void              *item;
+	void              *element;
 };
 
 struct list {
 	struct list_node  *head;
 	struct list_node  *tail;
-	int               nitem;
+	int               nelement;
 };
 
 
@@ -28,7 +29,7 @@ struct list *list_init(void)
 
 	list->head = NULL;
 	list->tail = NULL;
-	list->nitem = 0;
+	list->nelement = 0;
 
 	return list;
 }
@@ -44,7 +45,7 @@ void list_free(struct list *list)
 }
 
 
-static struct list_node *list_addnode(struct list *list, void *item)
+static struct list_node *list_addnode(struct list *list, void *element)
 {
 	struct list_node *node = (struct list_node *) malloc(sizeof(*node));
 	if (node == NULL) {
@@ -53,9 +54,9 @@ static struct list_node *list_addnode(struct list *list, void *item)
 
 	node->next = NULL;
 	node->previous = NULL;
-	node->item = item;
+	node->element = element;
 
-	list->nitem++;
+	list->nelement++;
 
 	return node;
 }
@@ -64,17 +65,17 @@ static struct list_node *list_addnode(struct list *list, void *item)
 static void list_delnode(struct list *list, struct list_node *node)
 {
 	free(node);
-	list->nitem--;
+	list->nelement--;
 }
 
 
-int list_prepend(struct list *list, void *item)
+int list_prepend(struct list *list, void *element)
 {
-	if (list == NULL) {
+	if (list == NULL || element == NULL) {
 		return EINVAL;
 	}
 
-	struct list_node *np = list_addnode(list, item);
+	struct list_node *np = list_addnode(list, element);
 	if (np == NULL) {
 		return errno;
 	}
@@ -92,13 +93,13 @@ int list_prepend(struct list *list, void *item)
 }
 
 
-int list_append(struct list *list, void *item)
+int list_append(struct list *list, void *element)
 {
-	if (list == NULL) {
+	if (list == NULL || element == NULL) {
 		return EINVAL;
 	}
 
-	struct list_node *np = list_addnode(list, item);
+	struct list_node *np = list_addnode(list, element);
 	if (np == NULL) {
 		return errno;
 	}
@@ -116,20 +117,20 @@ int list_append(struct list *list, void *item)
 }
 
 
-int list_remove(struct list *list, void *item)
+int list_remove(struct list *list, void *element)
 {
-	if (list == NULL) {
+	if (list == NULL || element == NULL) {
 		return EINVAL;
 	}
 
 	struct list_node *np = NULL; // node pointer
 	if (list->head == NULL) {
 		// empty list
-		return EINVAL;
+		return EADDRNOTAVAIL;
 	}
 
 	np = list->head;
-	if (list->head->item == item) {
+	if (list->head->element == element) {
 		list->head = np->next;
 		if (list->head == NULL) {
 			list->tail = NULL;
@@ -137,13 +138,13 @@ int list_remove(struct list *list, void *item)
 			list->head->previous = NULL;
 		}
 	} else {
-		while (np != NULL && np->item != item) {
+		while (np != NULL && np->element != element) {
 			np = np->next;
 		}
 
 		if (np == NULL) {
-			//item not in list
-			return EINVAL;
+			//element not in list
+			return EADDRNOTAVAIL;
 		}
 
 		np->previous->next = np->next;
@@ -156,27 +157,6 @@ int list_remove(struct list *list, void *item)
 
 	list_delnode(list, np);
 	return 0;
-}
-
-
-void *list_pop(struct list *list)
-{
-	if (list == NULL || list->tail == NULL) {
-		return NULL;
-	}
-
-	struct list_node *np = list->tail;
-	if (np->previous == NULL) {
-		list->head = NULL;
-	} else {
-		np->previous->next = NULL;
-	}
-	list->tail = np->previous;
-
-	void *item = np->item;
-	list_delnode(list, np);
-
-	return item;
 }
 
 
@@ -194,17 +174,130 @@ void *list_shift(struct list *list)
 	}
 	list->head = np->next;
 
-	void *item = np->item;
+	void *element = np->element;
 	list_delnode(list, np);
 
-	return item;
+	return element;
+}
+
+
+void *list_pop(struct list *list)
+{
+	if (list == NULL || list->tail == NULL) {
+		return NULL;
+	}
+
+	struct list_node *np = list->tail;
+	if (np->previous == NULL) {
+		list->head = NULL;
+	} else {
+		np->previous->next = NULL;
+	}
+	list->tail = np->previous;
+
+	void *element = np->element;
+	list_delnode(list, np);
+
+	return element;
 }
 
 
 int list_size(struct list *list)
 {
-	return list == NULL ? -EINVAL : list->nitem;
+	return list == NULL ? -EINVAL : list->nelement;
 }
+
+
+void TestListErroneousInput(CuTest *tc)
+{
+	int somenumber;
+
+	struct list *list = list_init();
+	CuAssertPtrNotNull(tc, list);
+
+	CuAssertIntEquals(tc, EINVAL, list_prepend(NULL, &somenumber));
+	CuAssertIntEquals(tc, EINVAL, list_prepend(list, NULL));
+	CuAssertIntEquals(tc, EINVAL, list_append(NULL, &somenumber));
+	CuAssertIntEquals(tc, EINVAL, list_append(list, NULL));
+	CuAssertIntEquals(tc, EINVAL, list_remove(NULL, &somenumber));
+	CuAssertIntEquals(tc, EINVAL, list_remove(list, NULL));
+	CuAssertIntEquals(tc, -EINVAL, list_size(NULL));
+	CuAssertPtrEquals(tc, NULL, list_shift(NULL));
+	CuAssertPtrEquals(tc, NULL, list_pop(NULL));
+	list_free(NULL);
+}
+
+
+void TestListEmpty(CuTest *tc)
+{
+	struct list *list = list_init();
+	CuAssertPtrNotNull(tc, list);
+
+	int somenumber;
+	CuAssertIntEquals(tc, EADDRNOTAVAIL, list_remove(list, &somenumber));
+
+	CuAssertPtrEquals(tc, NULL, list_shift(list));
+	CuAssertPtrEquals(tc, NULL, list_pop(list));
+	list_free(list);
+}
+
+
+void TestListNonempty(CuTest *tc)
+{
+	enum {
+		NELEMENT = 100,
+	};
+	int elements[NELEMENT];
+
+	struct list *list = list_init();
+	CuAssertPtrNotNull(tc, list);
+
+	int i;
+	for (i = 0; i < NELEMENT; i++) {
+		elements[i] = NELEMENT-i;
+
+		CuAssertIntEquals(tc, i, list_size(list));
+		CuAssertIntEquals(tc, 0, list_append(list, elements+i));
+		CuAssertIntEquals(tc, i+1, list_size(list));
+	}
+
+	int somenumber;
+	CuAssertIntEquals(tc, EADDRNOTAVAIL, list_remove(list, &somenumber));
+
+	for (i = NELEMENT; i > 0; i--) {
+		CuAssertIntEquals(tc, i, list_size(list));
+		CuAssertIntEquals(tc, 0, list_remove(list, elements+(i-1)));
+		CuAssertIntEquals(tc, i-1, list_size(list));
+	}
+
+	for (i = 0; i < NELEMENT; i++) {
+		CuAssertIntEquals(tc, i ,list_size(list));
+		CuAssertIntEquals(tc, 0, list_append(list, elements+i));
+		CuAssertIntEquals(tc, i+1 ,list_size(list));
+	}
+
+	for (i = 0; i < NELEMENT>>1; i++) {
+		CuAssertIntEquals(tc, NELEMENT-i, list_size(list));
+		CuAssertPtrEquals(tc, elements+i, list_shift(list));
+		CuAssertIntEquals(tc, NELEMENT-i-1, list_size(list));
+	}
+
+	for (i = NELEMENT>>1; i > 0; i--) {
+		CuAssertIntEquals(tc, NELEMENT-i, list_size(list));
+		CuAssertIntEquals(tc, 0, list_prepend(list, elements+(i-1)));
+		CuAssertIntEquals(tc, NELEMENT-i+1, list_size(list));
+	}
+
+	for (i = NELEMENT; i > 0; i--) {
+		CuAssertIntEquals(tc, i, list_size(list));
+		CuAssertPtrEquals(tc, elements+(i-1), list_pop(list));
+		CuAssertIntEquals(tc, i-1, list_size(list));
+	}
+
+
+	list_free(list);
+}
+
 
 
 /* Double linked list iterator implementation */
@@ -250,12 +343,12 @@ void *list_iterator_next(struct list_iterator *li)
 		return NULL;
 	}
 
-	void *item = li->next->item;
+	void *element = li->next->element;
 
 	li->previous = li->next;
 	li->next = li->next->next;
 
-	return item;
+	return element;
 }
 
 
@@ -269,12 +362,12 @@ void *list_iterator_previous(struct list_iterator *li)
 		return NULL;
 	}
 
-	void *item = li->previous->item;
+	void *element = li->previous->element;
 
 	li->next = li->previous;
 	li->previous = li->previous->previous;
 
-	return item;
+	return element;
 }
 
 
@@ -288,4 +381,71 @@ int list_iterator_reset(struct list_iterator *li)
 	li->next = li->list->head;
 	li->previous = li->list->tail;
 	return 0;
+}
+
+
+void TestList_iteratorErroneousInput(CuTest *tc)
+{
+	CuAssertPtrEquals(tc, NULL, list_iterator_init(NULL));
+	CuAssertPtrEquals(tc, NULL, list_iterator_next(NULL));
+	CuAssertPtrEquals(tc, NULL, list_iterator_previous(NULL));
+	CuAssertIntEquals(tc, EINVAL, list_iterator_reset(NULL));
+	list_iterator_free(NULL);
+}
+
+
+void TestList_iteratorEmpty(CuTest *tc)
+{
+	struct list *list = list_init();
+	CuAssertPtrNotNull(tc, list);
+	struct list_iterator *li = list_iterator_init(list);
+	CuAssertPtrNotNull(tc, li);
+
+	CuAssertPtrEquals(tc, NULL, list_iterator_next(li));
+	CuAssertPtrEquals(tc, NULL, list_iterator_previous(li));
+	CuAssertIntEquals(tc, 0, list_iterator_reset(li));
+
+	list_iterator_free(li);
+	list_free(list);
+}
+
+
+void TestList_iteratorNonempty(CuTest *tc)
+{
+	enum {
+		NELEMENT = 100,
+	};
+	int elements[NELEMENT];
+
+	struct list *list = list_init();
+	CuAssertPtrNotNull(tc, list);
+	struct list_iterator *li = list_iterator_init(list);
+	CuAssertPtrNotNull(tc, li);
+
+	int i;
+	for (i = 0; i < NELEMENT; i++) {
+		elements[i] = NELEMENT-i;
+		list_append(list, elements+i);
+	}
+
+	CuAssertIntEquals(tc, 0, list_iterator_reset(li));
+
+	for (i = 0; i < NELEMENT; i++) {
+		CuAssertPtrEquals(tc, elements+i, list_iterator_next(li));
+	}
+	CuAssertPtrEquals(tc, NULL, list_iterator_next(li));
+
+	for (i = NELEMENT-1; i >= 0; i--) {
+		CuAssertPtrEquals(tc, elements+i, list_iterator_previous(li));
+	}
+	CuAssertPtrEquals(tc, NULL, list_iterator_previous(li));
+
+
+	CuAssertIntEquals(tc, 0, list_iterator_reset(li));
+	CuAssertPtrEquals(tc, elements, list_iterator_next(li));
+	CuAssertIntEquals(tc, 0, list_iterator_reset(li));
+	CuAssertPtrEquals(tc, elements+(NELEMENT-1), list_iterator_previous(li));
+
+	list_iterator_free(li);
+	list_free(list);
 }
