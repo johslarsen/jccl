@@ -17,9 +17,10 @@ TEST_SUITE_GENERATOR := CuTest/make-tests.sh
 
 .PHONY: clean
 
-all: test
+all: $(TEST_SUITE)
 test: $(TEST_SUITE)
 	./$<
+	$(RM) $(TEST_SUITE_SRC)
 
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
@@ -29,7 +30,6 @@ $(TEST_SUITE_SRC):
 
 $(TEST_SUITE): $(OBJECTS) $(HEADERS)
 	$(CC) $(CFLAGS) $^ -o $@ $(LIBS)
-	$(RM) $(TEST_SUITE_SRC)
 
 clean:
 	$(RM) $(TEST_SUITE) $(TEST_SUITE_SRC) $(OBJECTS)
