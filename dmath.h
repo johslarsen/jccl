@@ -33,7 +33,7 @@ extern long gcd(long a, long b);
  * both a and b without a remainder.
  *
  * returns:
- *   a =dd= 0 || b == 0 --> -EDOM
+ *   a == 0 || b == 0 --> -EDOM
  *   --> lcm(a, b)
  */
 extern long lcm(int a, int b);
@@ -55,7 +55,7 @@ extern int arecoprime(long a, long b);
  *
  * returns:
  *   a[0..na, i] == a[(i+1)..na] --> 0
- *   --> arecoprime(a[0..na, i], [(i+1)..na]) == 1
+ *   --> arecoprime(a[0..na, i], a[(i+1)..na]) == 1
  */
 extern int arecoprime_pairwise(const long *a, int na);
 
@@ -80,9 +80,9 @@ extern long extended_gcd(long a, long b, long *s, long *t);
  *   x \equiv a_neq % m_neq
  *
  * returns:
- *   a == NULL || b == NULL || neq == 0  --> -EINVAL
+ *   a == NULL || m == NULL || neq == 0  --> -EINVAL
  *
- *   a[0..neq] == 0 || b[0..neq] == 0    --> -EDOM
+ *   a[0..neq] == 0 || m[0..neq] == 0    --> -EDOM
  *   arecoprime_pairwise(m, neq) == 0    --> -EDOM
  *
  *   --> x (from equation system)
