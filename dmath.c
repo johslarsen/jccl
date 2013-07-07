@@ -361,40 +361,37 @@ void TestIsprime(CuTest *tc)
 int is_power_of_2(unsigned long n)
 {
 	if (n == 0) {
-		return 0;
+		return 0; // undefined
 	}
 
 	while ((n&1) == 0) {
 		n >>= 1;
 	}
 
-	return n == 1;
+	return n == 1; // is power of 2 if only 1 bit is set
 }
 
 
 int is_power_of(int base, unsigned long n)
 {
-	if (base < 0) {
-		return 0;
-	} else if (base == 0) {
-		return n == 0;
-	} else if (base == 1) {
-		return n == 1;
+	if (base < 2) {
+		return 0; // undefined
 	}
 
 	if (n == 0) {
-		return 0;
+		return 0; // undefined
 	} else if (n == 1) {
-		return 1;
+		return 1; // base^0 = 1, not handled correctly by the general algorithm
 	}
 
-	int cannot_be_power_of = 0;
 	while (n > 0) {
 		if (n == base) {
-			return !cannot_be_power_of;
+			return 1;
+		}
+		if ((n%base) != 0) {
+			return 0;
 		}
 
-		cannot_be_power_of |= n%base;
 		n /= base;
 	}
 
@@ -410,6 +407,11 @@ void TestIs_power_of(CuTest *tc)
 	CuAssertIntEquals(tc, 0, is_power_of_2(0));
 	CuAssertIntEquals(tc, 0, is_power_of(2, 0));
 	CuAssertIntEquals(tc, 0, is_power_of(5, 0));
+	CuAssertIntEquals(tc, 0, is_power_of(1, 1337));
+	CuAssertIntEquals(tc, 0, is_power_of(0, 0));
+	CuAssertIntEquals(tc, 0, is_power_of(0, 1337));
+	CuAssertIntEquals(tc, 0, is_power_of(-1, 1337));
+
 
 	int i;
 	for (i = 1; i > 0; i<<=1) { // escapes on overflow
@@ -465,12 +467,9 @@ int dmath_ilog2(unsigned long n)
 
 int dmath_ilogb(int base, long unsigned int n)
 {
-	if (base == 0) {
-		return n == 0 ? -EDOM : 0;
-	} else if (base == 1) {
+	if (base < 2) {
 		return -EDOM;
 	}
-
 	if (n == 0) {
 		return -EDOM;
 	}
@@ -556,7 +555,7 @@ void TestLogBasestring_from_log(CuTest *tc)
 	};
 
 	CuAssertIntEquals(tc, dmath_ilogb(0, 0), -EDOM);
-	CuAssertIntEquals(tc, dmath_ilogb(0, 1337), 0);
+	CuAssertIntEquals(tc, dmath_ilogb(0, 1337), -EDOM);
 	CuAssertIntEquals(tc, dmath_ilogb(1, 0), -EDOM);
 	CuAssertIntEquals(tc, dmath_ilogb(1, 1337), -EDOM);
 

@@ -103,6 +103,7 @@ extern int isprime_cached(unsigned int n);
 /*
  * integer operations to find the floor value of the base logaritm of n.
  * returns:
+ *   base < 2 --> -EDOM
  *   n == 0 --> -EDOM
  *   --> log_{base}(n)
  */
@@ -112,11 +113,12 @@ extern int dmath_ilog2(long unsigned int n);
 
 
 /*
- * can n be written as base^a
+ * can n be written as base^a, a \in Z
  *
  * returns:
- *   !(base^a == n) --> 0
- *   --> a
+ *   base < 2 --> 0
+ *   n == 0 --> 0
+ *   --> base^a == n
  */
 extern int is_power_of(int base, unsigned long n);
 /* more efficient version when base == 2 */
