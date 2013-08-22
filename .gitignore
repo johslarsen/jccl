@@ -2,3 +2,4 @@
 *.test
 gmon.out
 AllTests
+AllTests.c
