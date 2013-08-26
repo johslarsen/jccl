@@ -468,7 +468,7 @@ void TestDict_put(CuTest *tc)
 
 		CuAssertIntEquals(tc, 0, dict_put(dict, (void *)wannabe_pointer, NULL, &nkey, &nvalue));
 		CuAssertIntEquals(tc, i, dict_size(dict));
-		CuAssertPtrEquals(tc, wannabe_pointer, nkey);
+		CuAssertPtrEquals(tc, (void *)wannabe_pointer, nkey);
 		CuAssertPtrEquals(tc, (void *)0x1337, nvalue);
 	}
 
