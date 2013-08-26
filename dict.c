@@ -1,13 +1,13 @@
 #include "CuTest/CuTest.h"
-#include "tree.h"
+#include "dict.h"
 #include <assert.h>
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 
-/* Self-balancing binary search tree
+/* Self-balancing binary search dict
  *
- * based on aatree (Arne Andersson tree), http://user.it.uu.se/~arnea/ps/simp.pdf */
+ * based on aatree (Arne Andersson dict), http://user.it.uu.se/~arnea/ps/simp.pdf */
 
 struct subtree {
 	struct subtree *left, *right;
@@ -15,9 +15,9 @@ struct subtree {
 	int nnode, level;
 };
 
-struct tree {
+struct dict {
 	struct subtree *head;
-	tree_comparator compar;
+	dict_comparator compar;
 };
 
 struct subtree end_of_tree_sentinel = {.left = &end_of_tree_sentinel, .right = &end_of_tree_sentinel};
@@ -77,21 +77,21 @@ void TestNodeConstructionAndDestruction(CuTest *tc)
 }
 
 
-struct tree *tree_init(tree_comparator compar)
+struct dict *dict_init(dict_comparator compar)
 {
 	if (compar == NULL) {
 		return NULL;
 	}
 
-	struct tree *tree = malloc(sizeof(*tree));
-	if (tree == NULL) {
+	struct dict *dict = malloc(sizeof(*dict));
+	if (dict == NULL) {
 		return NULL;
 	}
 
-	tree->head = &end_of_tree_sentinel;
-	tree->compar = compar;
+	dict->head = &end_of_tree_sentinel;
+	dict->compar = compar;
 
-	return tree;
+	return dict;
 }
 
 
@@ -108,11 +108,11 @@ static void subtree_destroy(struct subtree *head)
 	node_destroy(head);
 }
 
-void tree_destroy(struct tree *tree)
+void dict_destroy(struct dict *dict)
 {
-	if (tree != NULL) {
-		subtree_destroy(tree->head);
-		free(tree);
+	if (dict != NULL) {
+		subtree_destroy(dict->head);
+		free(dict);
 	}
 }
 
@@ -123,20 +123,20 @@ static int subtree_size(struct subtree *head)
 	return head->nnode;
 }
 
-int tree_size(struct tree *tree)
+int dict_size(struct dict *dict)
 {
-	return tree == NULL ? -EINVAL : subtree_size(tree->head);
+	return dict == NULL ? -EINVAL : subtree_size(dict->head);
 }
 
 
-void TestTreeConstructionAndDestruction(CuTest *tc)
+void TestDictConstructionAndDestruction(CuTest *tc)
 {
-	struct tree *tree = tree_init(compare_pointers);
-	CuAssertPtrNotNull(tc, tree);
+	struct dict *dict = dict_init(compare_pointers);
+	CuAssertPtrNotNull(tc, dict);
 
-	CuAssertIntEquals(tc, 0, tree_size(tree));
+	CuAssertIntEquals(tc, 0, dict_size(dict));
 
-	tree_destroy(tree);
+	dict_destroy(dict);
 }
 
 
@@ -177,7 +177,7 @@ static struct subtree *dummy_3_layer_balanced_tree(struct subtree *seven_nodes)
 
 	return fourth;
 }
-void TestTreeDummyBalancedTrees(CuTest *tc)
+void TestDictDummyBalancedDicts(CuTest *tc)
 {
 	struct subtree nodes[7];
 
@@ -393,7 +393,7 @@ static struct subtree *split(struct subtree *head)
 }
 
 
-static struct subtree *subtree_add(struct subtree *head, tree_comparator compar, void const *key, void const *value, int *status)
+static struct subtree *subtree_put(struct subtree *head, dict_comparator compar, void const *key, void const *value, void **nkey, void **nvalue, int *status)
 {
 	if (EOT(head)) {
 		struct subtree *new = node_init(key, value);
@@ -401,22 +401,30 @@ static struct subtree *subtree_add(struct subtree *head, tree_comparator compar,
 			*status = errno != 0 ? errno : -1;
 			return &end_of_tree_sentinel;
 		}
+		if (nkey != NULL) {
+			*nkey = NULL;
+		}
+		if (nvalue != NULL) {
+			*nvalue = NULL;
+		}
 		return new;
 	}
 
 	int compared = compar(key, head->key);
 	if (compared < 0) {
-		head->left = subtree_add(head->left, compar, key, value, status);
-#ifdef TREE_OVERWRITE_VALUE
-	// WARNING: memory leakage pitfall
-	// WARNING: untested
+		head->left = subtree_put(head->left, compar, key, value, nkey, nvalue, status);
 	} else if (compared == 0) {
+		if (nkey != NULL) {
+			*nkey = (void *)head->key;
+		}
+		if (nvalue != NULL) {
+			*nvalue = (void *)head->value;
+		}
 		head->key = key;
 		head->value = value;
 		return head;
-#endif /*TREE_OVERWRITE_VALUE*/
 	} else {
-		head->right = subtree_add(head->right, compar, key, value, status);
+		head->right = subtree_put(head->right, compar, key, value, nkey, nvalue, status);
 	}
 
 	node_reconstruct_nnode(head);
@@ -427,49 +435,57 @@ static struct subtree *subtree_add(struct subtree *head, tree_comparator compar,
 	return head;
 }
 
-int tree_add(struct tree *tree, void const *key, void const *value)
+int dict_put(struct dict *dict, void const *key, void const *value, void **nkey, void **nvalue)
 {
-	if (tree == NULL || key == NULL) {
+	if (dict == NULL || key == NULL) {
 		return EINVAL;
 	}
 
 	int status = 0;
-	struct subtree *head = subtree_add(tree->head, tree->compar, key, value, &status);
+	struct subtree *head = subtree_put(dict->head, dict->compar, key, value, nkey, nvalue, &status);
 	if (status != 0) {
 		return status;
 	}
 
-	tree->head = head;
+	dict->head = head;
 
 	return 0;
 }
 
-void TestTree_add(CuTest *tc)
+void TestDict_put(CuTest *tc)
 {
-	struct tree *tree = tree_init(compare_pointers);
-	CuAssertPtrNotNull(tc, tree);
+	struct dict *dict = dict_init(compare_pointers);
+	CuAssertPtrNotNull(tc, dict);
 
 	int i;
 	for (i = 1; i <= 7; i++) {
 		unsigned long wannabe_pointer = i;
-		CuAssertIntEquals(tc, 0, tree_add(tree, (void *)wannabe_pointer, NULL));
-		CuAssertIntEquals(tc, i, tree_size(tree));
+		void *nkey, *nvalue;
+		CuAssertIntEquals(tc, 0, dict_put(dict, (void *)wannabe_pointer, (void *)0x1337, &nkey, &nvalue));
+		CuAssertIntEquals(tc, i, dict_size(dict));
+		CuAssertPtrEquals(tc, NULL, nkey);
+		CuAssertPtrEquals(tc, NULL, nvalue);
+
+		CuAssertIntEquals(tc, 0, dict_put(dict, (void *)wannabe_pointer, NULL, &nkey, &nvalue));
+		CuAssertIntEquals(tc, i, dict_size(dict));
+		CuAssertPtrEquals(tc, wannabe_pointer, nkey);
+		CuAssertPtrEquals(tc, (void *)0x1337, nvalue);
 	}
 
 	// ensure it is balanced
-	CuAssertPtrEquals(tc, (void const *)1, tree->head->left->left->key);
-	CuAssertPtrEquals(tc, (void const *)2, tree->head->left->key);
-	CuAssertPtrEquals(tc, (void const *)3, tree->head->left->right->key);
-	CuAssertPtrEquals(tc, (void const *)4, tree->head->key);
-	CuAssertPtrEquals(tc, (void const *)5, tree->head->right->left->key);
-	CuAssertPtrEquals(tc, (void const *)6, tree->head->right->key);
-	CuAssertPtrEquals(tc, (void const *)7, tree->head->right->right->key);
+	CuAssertPtrEquals(tc, (void const *)1, dict->head->left->left->key);
+	CuAssertPtrEquals(tc, (void const *)2, dict->head->left->key);
+	CuAssertPtrEquals(tc, (void const *)3, dict->head->left->right->key);
+	CuAssertPtrEquals(tc, (void const *)4, dict->head->key);
+	CuAssertPtrEquals(tc, (void const *)5, dict->head->right->left->key);
+	CuAssertPtrEquals(tc, (void const *)6, dict->head->right->key);
+	CuAssertPtrEquals(tc, (void const *)7, dict->head->right->right->key);
 
-	tree_destroy(tree);
+	dict_destroy(dict);
 }
 
 
-static void *subtree_search(struct subtree *head, tree_comparator compar, void const *key, int *index_of_key)
+static void *subtree_get(struct subtree *head, dict_comparator compar, void const *key, int *index_of_key)
 {
 	assert(key != NULL);
 	int le_valued_keys_skipped = 0;
@@ -495,56 +511,60 @@ static void *subtree_search(struct subtree *head, tree_comparator compar, void c
 	return NULL;
 }
 
-void *tree_search(struct tree *tree, void const *key, int *index_of_key)
+void *dict_get(struct dict *dict, void const *key, int *index_of_key)
 {
-	if (tree == NULL || key == NULL) {
+	if (dict == NULL || key == NULL) {
 		return NULL;
 	}
 
-	return subtree_search(tree->head, tree->compar, key, index_of_key);
+	return subtree_get(dict->head, dict->compar, key, index_of_key);
 }
-void TestTree_search(CuTest *tc)
+void TestDict_get(CuTest *tc)
 {
-	struct tree *tree = tree_init(compare_pointers);
-	CuAssertPtrNotNull(tc, tree);
+	struct dict *dict = dict_init(compare_pointers);
+	CuAssertPtrNotNull(tc, dict);
 
 	int index;
-	CuAssertPtrEquals(tc, NULL, tree_search(tree, (void *)0xdeadbeef, &index));
-	CuAssertPtrEquals(tc, NULL, tree_search(tree, (void *)0xdeadbeef, NULL));
+	CuAssertPtrEquals(tc, NULL, dict_get(dict, (void *)0xdeadbeef, &index));
+	CuAssertPtrEquals(tc, NULL, dict_get(dict, (void *)0xdeadbeef, NULL));
 
 	int i;
 	for (i = 0; i < 7; i++) {
 		unsigned long key = i+1;
-		CuAssertPtrEquals(tc, NULL, tree_search(tree, (void *)key, &index));
-		CuAssertPtrEquals(tc, NULL, tree_search(tree, (void *)key, NULL));
+		CuAssertPtrEquals(tc, NULL, dict_get(dict, (void *)key, &index));
+		CuAssertPtrEquals(tc, NULL, dict_get(dict, (void *)key, NULL));
 
-		CuAssertIntEquals(tc, 0, tree_add(tree, (void *)key, (void *)key));
+		CuAssertIntEquals(tc, 0, dict_put(dict, (void *)key, (void *)key, NULL, NULL));
 
 		int j;
 		for (j = 0; j < i; j++) {
 		unsigned long key = j+1;
-			CuAssertPtrEquals(tc, (void *)key, tree_search(tree, (void *)key, NULL));
-			CuAssertPtrEquals(tc, (void *)key, tree_search(tree, (void *)key, &index));
+			CuAssertPtrEquals(tc, (void *)key, dict_get(dict, (void *)key, NULL));
+			CuAssertPtrEquals(tc, (void *)key, dict_get(dict, (void *)key, &index));
 			CuAssertIntEquals(tc, j, index);
 		}
 	}
 
-	tree_destroy(tree);
+	dict_destroy(dict);
 }
 
 
 /*
- * removes the first key-value pair where compar(key, node->key) == 0
+ * removes the key-value pair such that compar(key, node->key) == 0
+ *
+ * NOTE: the contents of node->key,node->value is untouched and NOT freed
  *
  * returns:
- *   tree == NULL || key == NULL --> EINVAL
- *   key not in tree --> ESRCH
+ *   dict == NULL || key == NULL --> EINVAL
+ *   key not in dict --> ESRCH
  *   --> 0
+ *     nkey != NULL -> *nkey = node->key
+ *     nvalue != NULL -> *nvalue = node->value
  */
-extern int tree_remove(struct tree *tree, void const *key);
+extern int dict_remove(struct dict *dict, void const *key, void **nkey, void **nvalue);
 
 
-static int subtree_select(struct subtree *head, tree_comparator compar, int i, void **key, void **value)
+static int subtree_select(struct subtree *head, dict_comparator compar, int i, void **key, void **value)
 {
 	assert(key != NULL && value != NULL);
 
@@ -573,32 +593,32 @@ static int subtree_select(struct subtree *head, tree_comparator compar, int i, v
 	return ESRCH;
 }
 
-int tree_select(struct tree *tree, int i, void **key, void **value)
+int dict_select(struct dict *dict, int i, void **key, void **value)
 {
-	if (tree == NULL || key == NULL || value == NULL) {
+	if (dict == NULL || key == NULL || value == NULL) {
 		return EINVAL;
 	}
 
-	return subtree_select(tree->head, tree->compar, i, key, value);
+	return subtree_select(dict->head, dict->compar, i, key, value);
 }
-void TestTree_select(CuTest *tc)
+void TestDict_select(CuTest *tc)
 {
-	struct tree *tree = tree_init(compare_pointers);
-	CuAssertPtrNotNull(tc, tree);
+	struct dict *dict = dict_init(compare_pointers);
+	CuAssertPtrNotNull(tc, dict);
 
 	void *rkey, *rvalue;
-	CuAssertIntEquals(tc, ESRCH, tree_select(tree, 0, &rkey, &rvalue));
+	CuAssertIntEquals(tc, ESRCH, dict_select(dict, 0, &rkey, &rvalue));
 
 	int i;
 	for (i = 0; i < 7; i++) {
 		unsigned long key = i+1;
 		unsigned long value = key + 1000;
-		CuAssertIntEquals(tc, ESRCH, tree_select(tree, i, &rkey, &rvalue));
-		CuAssertIntEquals(tc, ESRCH, tree_select(tree, -i-1, &rkey, &rvalue));
+		CuAssertIntEquals(tc, ESRCH, dict_select(dict, i, &rkey, &rvalue));
+		CuAssertIntEquals(tc, ESRCH, dict_select(dict, -i-1, &rkey, &rvalue));
 
-		CuAssertIntEquals(tc, 0, tree_add(tree, (void *)key, (void *)value));
+		CuAssertIntEquals(tc, 0, dict_put(dict, (void *)key, (void *)value, NULL, NULL));
 
-		CuAssertIntEquals(tc, 0, tree_select(tree, i, &rkey, &rvalue));
+		CuAssertIntEquals(tc, 0, dict_select(dict, i, &rkey, &rvalue));
 		CuAssertPtrEquals(tc, (void *)key, rkey);
 		CuAssertPtrEquals(tc, (void *)value, rvalue);
 
@@ -607,21 +627,21 @@ void TestTree_select(CuTest *tc)
 			unsigned long key = j+1;
 			unsigned long value = key + 1000;
 
-			CuAssertIntEquals(tc, 0, tree_select(tree, j, &rkey, &rvalue));
+			CuAssertIntEquals(tc, 0, dict_select(dict, j, &rkey, &rvalue));
 			CuAssertPtrEquals(tc, (void *)key, rkey);
 			CuAssertPtrEquals(tc, (void *)value, rvalue);
 
-			CuAssertIntEquals(tc, 0, tree_select(tree, -i-1+j, &rkey, &rvalue));
+			CuAssertIntEquals(tc, 0, dict_select(dict, -i-1+j, &rkey, &rvalue));
 			CuAssertPtrEquals(tc, (void *)key, rkey);
 			CuAssertPtrEquals(tc, (void *)value, rvalue);
 		}
 	}
 
-	tree_destroy(tree);
+	dict_destroy(dict);
 }
 
 
-static int subtree_for_each(struct subtree *head, tree_action action, void *state)
+static int subtree_for_each(struct subtree *head, dict_action action, void *state)
 {
 	if (EOT(head)) {
 		return 0;
@@ -638,23 +658,23 @@ static int subtree_for_each(struct subtree *head, tree_action action, void *stat
 	return subtree_for_each(head->right, action, state);
 }
 
-int tree_for_each(struct tree *tree, tree_action action, void *state)
+int dict_for_each(struct dict *dict, dict_action action, void *state)
 {
-	if (tree == NULL || action == NULL) {
+	if (dict == NULL || action == NULL) {
 		return EINVAL;
 	}
-	return subtree_for_each(tree->head, action, state);
+	return subtree_for_each(dict->head, action, state);
 }
 
 
-struct tree_action_dump_state {
+struct dict_action_dump_state {
 	int n;
 	void const *keys[NNODE_3_LAYER_BALANCED_TREE];
 	void const *values[NNODE_3_LAYER_BALANCED_TREE];
 };
-static int tree_action_dump(void const *key, void const *value, void *state)
+static int dict_action_dump(void const *key, void const *value, void *state)
 {
-	struct tree_action_dump_state *known_state = (struct tree_action_dump_state *)state;
+	struct dict_action_dump_state *known_state = (struct dict_action_dump_state *)state;
 	int n = known_state->n++;
 	known_state->keys[n] = key;
 	known_state->values[n] = value;
@@ -662,21 +682,21 @@ static int tree_action_dump(void const *key, void const *value, void *state)
 	return 0;
 }
 
-void TestTree_for_each(CuTest *tc)
+void TestDict_for_each(CuTest *tc)
 {
-	struct tree *tree = tree_init(compare_pointers);
-	CuAssertPtrNotNull(tc, tree);
+	struct dict *dict = dict_init(compare_pointers);
+	CuAssertPtrNotNull(tc, dict);
 
 	int i;
 	for (i = 0; i < NNODE_3_LAYER_BALANCED_TREE; i++) {
 		unsigned long key = i+1;
 		unsigned long value = key+1000;
 
-		CuAssertIntEquals(tc, 0, tree_add(tree, (void *)key, (void *)value));
+		CuAssertIntEquals(tc, 0, dict_put(dict, (void *)key, (void *)value, NULL, NULL));
 
-		struct tree_action_dump_state state;
+		struct dict_action_dump_state state;
 		state.n = 0;
-		tree_for_each(tree, tree_action_dump, &state);
+		dict_for_each(dict, dict_action_dump, &state);
 		CuAssertIntEquals(tc, i+1, state.n);
 
 		int j;
@@ -691,33 +711,33 @@ void TestTree_for_each(CuTest *tc)
 }
 
 
-struct tree_action_abort_after_state {
+struct dict_action_abort_after_state {
 	int ncall;
 	int abort_after;
 };
-static int tree_action_abort_after(void const *key, void const *value, void *state)
+static int dict_action_abort_after(void const *key, void const *value, void *state)
 {
-	struct tree_action_abort_after_state *known_state = (struct tree_action_abort_after_state *)state;
+	struct dict_action_abort_after_state *known_state = (struct dict_action_abort_after_state *)state;
 	known_state->ncall++;
 	return known_state->ncall >= known_state->abort_after ? known_state->abort_after : 0;
 }
 
-void TestTree_for_eachWithAbortion(CuTest *tc)
+void TestDict_for_eachWithAbortion(CuTest *tc)
 {
-	struct tree *tree = tree_init(compare_pointers);
-	CuAssertPtrNotNull(tc, tree);
+	struct dict *dict = dict_init(compare_pointers);
+	CuAssertPtrNotNull(tc, dict);
 
 	int i;
 	for (i = 0; i < NNODE_3_LAYER_BALANCED_TREE; i++) {
 		unsigned long key = i+1;
-		CuAssertIntEquals(tc, 0, tree_add(tree, (void *)key, (void *)key));
+		CuAssertIntEquals(tc, 0, dict_put(dict, (void *)key, (void *)key, NULL, NULL));
 
 		int j;
 		for (j = 1; j < i; j++) { // cannot abort before the zeroth call
-			struct tree_action_abort_after_state state;
+			struct dict_action_abort_after_state state;
 			state.ncall = 0;
 			state.abort_after = j;
-			CuAssertIntEquals(tc, j, tree_for_each(tree, tree_action_abort_after, &state));
+			CuAssertIntEquals(tc, j, dict_for_each(dict, dict_action_abort_after, &state));
 
 			CuAssertIntEquals(tc, j, state.ncall);
 		}
