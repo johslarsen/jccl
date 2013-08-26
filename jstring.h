@@ -14,4 +14,7 @@ extern char *strnchr(const char *s, size_t count, int character);
  */
 char *end_of_quoted_string(const char *s, size_t count, char quote, char escape);
 
+typedef int (*character_modifier)(int c); // tolower(),...
+char *strncpy_with_modifier(char *dest, const char *src, size_t count, character_modifier modifier);
+
 #endif /*JSTRING_H*/

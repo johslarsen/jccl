@@ -1,7 +1,9 @@
+#include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/types.h>
 #include "CuTest/CuTest.h"
+#include "jstring.h"
 
 #ifndef strnchr // this is based on the linux interface, https://www.kernel.org/doc/htmldocs/kernel-api/API-strnchr.html
 char *strnchr(const char *s, size_t count, int c)
@@ -79,4 +81,33 @@ void TestEnd_of_quoted_string(CuTest *tc)
 	CuAssertPtrEquals(tc, NULL, end_of_quoted_string(s, 0, '\"', '\\'));
 	CuAssertPtrEquals(tc, s, end_of_quoted_string(s, count, '\"', '\\'));
 	CuAssertPtrEquals(tc, last_quote, end_of_quoted_string(s+1, count, '\"', '\\'));
+}
+
+
+char *strncpy_with_modifier(char *dest, const char *src, size_t count, character_modifier modifier)
+{
+	if (dest == NULL || src == NULL) {
+		return dest;
+	}
+
+	char *original_dest = dest;
+
+	for (; count > 0 && *src != '\0'; count--) {
+		*dest++ = modifier(*src++);
+	}
+	if (count > 0) {
+		*dest = '\0';
+	}
+
+	return original_dest;
+}
+void TestStrncpy_with_modifier(CuTest *tc)
+{
+	char buf[200];
+	char some_camelcase[] = "SoMeCaMeLCaSe";
+	CuAssertStrEquals(tc, "somecamelcase", strncpy_with_modifier(buf, some_camelcase, sizeof(some_camelcase), tolower));
+
+	buf[4] = '\0';
+	char another_string_longer_than_4[] = "another";
+	CuAssertStrEquals(tc, "ANOT", strncpy_with_modifier(buf, another_string_longer_than_4, 4, toupper));
 }
