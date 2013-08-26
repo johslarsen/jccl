@@ -2,8 +2,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/types.h>
+#include <string.h>
 #include "CuTest/CuTest.h"
 #include "jstring.h"
+
+#define LOWER_CASE_US_ALPHABET "abdefghijklmnopqrstuvwxyz"
+#define ZERO_THROUGH_NINE "0123456789"
 
 #ifndef strnchr // this is based on the linux interface, https://www.kernel.org/doc/htmldocs/kernel-api/API-strnchr.html
 char *strnchr(const char *s, size_t count, int c)
@@ -24,7 +28,7 @@ char *strnchr(const char *s, size_t count, int c)
 #endif /*strnchr*/
 void TestStrnchr(CuTest *tc)
 {
-	char s[] = "abcdefghijklmnopqrstuvwxyz";
+	char s[] = LOWER_CASE_US_ALPHABET;
 
 	CuAssertPtrEquals(tc, NULL, strnchr(s, sizeof(s), -1));
 	int i;
@@ -35,6 +39,49 @@ void TestStrnchr(CuTest *tc)
 		}
 		for ( ; j < sizeof(s); j++) {
 			CuAssertPtrEquals(tc, NULL, strnchr(s, i, s[j]));
+		}
+	}
+}
+
+#ifndef strnstr // this is based on the linux interface, https://www.kernel.org/doc/htmldocs/kernel-api/API-strnchr.html
+char *strnstr(const char *s1, const char *s2, size_t len)
+{
+	if (s1 == NULL || s2 == NULL) {
+		return NULL;
+	}
+
+	size_t s2_len = strlen(s2);
+	while(len >= s2_len) {
+		if (strncmp(s1, s2, s2_len) == 0) {
+			return (char *)s1;
+		}
+		s1++, len--;
+	}
+
+	return NULL;
+}
+#endif /*strnstr*/
+void TestStrnstr(CuTest *tc)
+{
+	char s[] = LOWER_CASE_US_ALPHABET;
+
+	CuAssertStrEquals(tc, s, strnstr(s, "", 0));
+
+	CuAssertStrEquals(tc, NULL, strnstr(s, ZERO_THROUGH_NINE, sizeof(s)));
+	int i;
+	for (i = 0; i < sizeof(s)-1; i++) {
+		int j;
+		for (j = 0; j < i; j++) {
+			char str_with_this_char[2];
+			str_with_this_char[0] = s[j];
+			str_with_this_char[1] = '\0';
+			CuAssertPtrEquals(tc, s+j, strnstr(s, str_with_this_char, i));
+		}
+		for ( ; j < sizeof(s)-1; j++) {
+			char str_with_this_char[2];
+			str_with_this_char[0] = s[j];
+			str_with_this_char[1] = '\0';
+			CuAssertPtrEquals(tc, NULL, strnstr(s, str_with_this_char, i));
 		}
 	}
 }
