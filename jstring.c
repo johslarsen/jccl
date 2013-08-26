@@ -3,7 +3,7 @@
 #include <sys/types.h>
 #include "CuTest/CuTest.h"
 
-#ifndef strnchr
+#ifndef strnchr // this is based on the linux interface, https://www.kernel.org/doc/htmldocs/kernel-api/API-strnchr.html
 char *strnchr(const char *s, size_t count, int c)
 {
 	if (s == NULL || count == 0) {
@@ -19,8 +19,7 @@ char *strnchr(const char *s, size_t count, int c)
 
 	return NULL;
 }
-
-
+#endif /*strnchr*/
 void TestStrnchr(CuTest *tc)
 {
 	char s[] = "abcdefghijklmnopqrstuvwxyz";
@@ -37,4 +36,47 @@ void TestStrnchr(CuTest *tc)
 		}
 	}
 }
-#endif /*strnchr*/
+
+
+char *end_of_quoted_string(const char *s, size_t count, char quote, char escape)
+{
+	if (s == NULL) {
+		return NULL;
+	}
+
+	const char *next_quote = NULL;
+	while (count > 0) {
+		next_quote = strnchr(s, count, quote);
+		if (next_quote == NULL) {
+			break;
+		}
+
+		const char *first_preceding_non_escape = next_quote-1;
+		while (first_preceding_non_escape >= s && *first_preceding_non_escape == escape) {
+			first_preceding_non_escape--;
+		}
+		size_t npreceding_escape = next_quote-(first_preceding_non_escape+1); // + character that is not an escape character
+
+		if ((npreceding_escape & 1) == 0) {
+			// all preceding escape characters are escaped
+			break;
+		}
+
+		const char *succeeding_char = next_quote + 1;
+		count -= succeeding_char-s;
+		s = succeeding_char;
+	}
+
+	return (char *)next_quote;
+}
+void TestEnd_of_quoted_string(CuTest *tc)
+{
+	char s[] = "\"\\\"\\\\\\\"\\\\\\\\\"";
+	size_t count = sizeof(s)-1; // -'\0'
+
+	char *last_quote = s+count-1;
+
+	CuAssertPtrEquals(tc, NULL, end_of_quoted_string(s, 0, '\"', '\\'));
+	CuAssertPtrEquals(tc, s, end_of_quoted_string(s, count, '\"', '\\'));
+	CuAssertPtrEquals(tc, last_quote, end_of_quoted_string(s+1, count, '\"', '\\'));
+}
