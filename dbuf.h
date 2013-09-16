@@ -11,12 +11,12 @@
 struct dbuf {
 	void *b;
 	size_t n;
-	size_t next_append;
+	size_t top;
 };
 #define DBUF_STATIC_INIT(initial_size) {\
 	.b = NULL,\
 	.n = initial_size,\
-	.next_append = 0,\
+	.top = 0,\
 }
 
 /*
@@ -55,13 +55,24 @@ extern int dbuf_grow(struct dbuf *buf);
  * copies n byte of data from s to the end of the buffer. this may cause the
  * dbuf to grow.
  *
- * WARNING: this assumes all bytes from buf->next_append to buf->n-1 is free.
+ * WARNING: this assumes all bytes from buf->top to buf->n-1 is free.
  *
  * returns:
  *   buf == NULL || s == NULL --> -EINVAL
  *   not enough space --> -ENOMEM
  *   --> offset from buf->b to the allocated memory
  */
-extern ssize_t dbuf_append(struct dbuf *buf, const void *s, size_t n);
+extern ssize_t dbuf_push(struct dbuf *buf, const void *s, size_t n);
+
+/*
+ * copies and pops the n last byte in the buffer into s. assuming s is large
+ * enough.
+ *
+ * returns:
+ *   buf == NULL || s == NULL --> EINVAL
+ *   n > buf->top --> ENODATA
+ *   --> 0,
+ */
+extern int dbuf_pop(struct dbuf *buf, void *s, size_t n);
 
 #endif /*DBUF_H*/
