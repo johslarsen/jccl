@@ -87,15 +87,36 @@ void TestStrnstr(CuTest *tc)
 }
 
 
+static char *end_of_quoted_string_escaped_by_double_quotes(const char *s, size_t count, char quote)
+{
+	while (count > 0) {
+		const char *next_quote = strnchr(s, count, quote);
+		if (next_quote == NULL) {
+			break;
+		}
+		if (count == 1 || next_quote[1] != quote) {
+			return (char *)next_quote;
+		}
+
+		const char *char_after_escaped_quote = next_quote + 1 + 1; // + '"'
+		count -= char_after_escaped_quote-s;
+		s = char_after_escaped_quote;
+	}
+
+	return NULL;
+}
+
 char *end_of_quoted_string(const char *s, size_t count, char quote, char escape)
 {
 	if (s == NULL) {
 		return NULL;
 	}
+	if (quote == escape) {
+		return end_of_quoted_string_escaped_by_double_quotes(s, count, quote);
+	}
 
-	const char *next_quote = NULL;
 	while (count > 0) {
-		next_quote = strnchr(s, count, quote);
+		const char *next_quote = strnchr(s, count, quote);
 		if (next_quote == NULL) {
 			break;
 		}
@@ -107,8 +128,7 @@ char *end_of_quoted_string(const char *s, size_t count, char quote, char escape)
 		size_t npreceding_escape = next_quote-(first_preceding_non_escape+1); // + character that is not an escape character
 
 		if ((npreceding_escape & 1) == 0) {
-			// all preceding escape characters are escaped
-			break;
+			return (char *)next_quote;
 		}
 
 		const char *succeeding_char = next_quote + 1;
@@ -116,7 +136,7 @@ char *end_of_quoted_string(const char *s, size_t count, char quote, char escape)
 		s = succeeding_char;
 	}
 
-	return (char *)next_quote;
+	return NULL;
 }
 void TestEnd_of_quoted_string(CuTest *tc)
 {
@@ -127,7 +147,27 @@ void TestEnd_of_quoted_string(CuTest *tc)
 
 	CuAssertPtrEquals(tc, NULL, end_of_quoted_string(s, 0, '\"', '\\'));
 	CuAssertPtrEquals(tc, s, end_of_quoted_string(s, count, '\"', '\\'));
-	CuAssertPtrEquals(tc, last_quote, end_of_quoted_string(s+1, count, '\"', '\\'));
+	CuAssertPtrEquals(tc, NULL, end_of_quoted_string(s+1, count-2, '\"', '\\'));
+	CuAssertPtrEquals(tc, last_quote, end_of_quoted_string(s+1, count-1, '\"', '\\'));
+}
+void TestEnd_of_quoted_stringWithQuoteAsEscape(CuTest *tc)
+{
+	char s[] = "\"\"\"\"";
+	size_t count = sizeof(s)-1; // -'\0'
+
+	char *last_quote = s+count-1;
+
+	CuAssertPtrEquals(tc, NULL, end_of_quoted_string(s+1, count-2, '\"', '\"'));
+	CuAssertPtrEquals(tc, last_quote, end_of_quoted_string(s+1, count-1, '\"', '\"'));
+}
+void TestEnd_of_quoted_stringWithEmptyString(CuTest *tc) {
+	char s[] = "\"\"";
+	size_t count = sizeof(s)-1; // -'\0'
+
+	char *last_quote = s+count-1;
+
+	CuAssertPtrEquals(tc, last_quote, end_of_quoted_string(s+1, count-1, '\"', '\\'));
+	CuAssertPtrEquals(tc, last_quote, end_of_quoted_string(s+1, count-1, '\"', '\"'));
 }
 
 
