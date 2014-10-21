@@ -78,8 +78,7 @@ void TestJlogMessageAndPrefixExists(CuTest *tc) {
 	rewind(fp);
 
 	char buf[1024];
-	size_t nread;
-	nread = fread(buf, 1, sizeof(buf), fp);
+	fread(buf, 1, sizeof(buf), fp);
 	CuAssertPtrNotNull(tc, strstr(buf, PREFIX));
 	CuAssertPtrNotNull(tc, strstr(buf, MSG));
 }
