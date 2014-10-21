@@ -194,7 +194,7 @@ void TestStrncpy_with_modifier(CuTest *tc)
 	char some_camelcase[] = "SoMeCaMeLCaSe";
 	CuAssertStrEquals(tc, "somecamelcase", strncpy_with_modifier(buf, some_camelcase, sizeof(some_camelcase), tolower));
 
-	buf[4] = '\0';
 	char another_string_longer_than_4[] = "another";
-	CuAssertStrEquals(tc, "ANOT", strncpy_with_modifier(buf, another_string_longer_than_4, 4, toupper));
+	CuAssertStrEquals(tc, "ANOTcamelcase", strncpy_with_modifier(buf, another_string_longer_than_4, 4, toupper));
+	CuAssertStrnEquals(tc, "ANOT", 4, strncpy_with_modifier(buf, another_string_longer_than_4, 4, toupper));
 }
