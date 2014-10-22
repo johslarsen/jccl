@@ -1,5 +1,5 @@
-#ifndef dict_H
-#define dict_H
+#ifndef DICT_H
+#define DICT_H
 
 /*
  * comparator function
@@ -46,7 +46,7 @@ extern int dict_size(struct dict *dict);
  *     nkey != NULL -> *nkey = node ? node->key : NULL
  *     nvalue != NULL -> *nvalue = node ? node->value : NULL
  */
-extern int dict_put(struct dict *dict, void const *key, void const *value, void **node, void **nvalue);
+extern int dict_put(struct dict *dict, void const *key, void const *value, void **nkey, void **nvalue);
 
 /*
  * find the value to the node such that compar(key, node->key) == 0.
@@ -108,4 +108,4 @@ typedef int (*dict_action)(const void *key, const void *value, void *state);
 extern int dict_for_each(struct dict *dict, dict_action action, void *state);
 
 
-#endif /*dict_H*/
+#endif /*DICT_H*/
