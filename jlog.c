@@ -7,12 +7,12 @@
 #include "jlog.h"
 #include "CuTest/CuTest.h"
 
-void jlog(struct jlogger *logger, enum jlog_tag tag, char *prefix, char *fmt, ...) {
+void jlog(const struct jlogger *logger, enum jlog_tag tag, const char *prefix, const char *fmt, ...) {
 	va_list original_args;
 	va_start(original_args, fmt);
 	int i;
 	for (i = 0; i < logger->nwriter; i++) {
-		struct jlogger_writer *writer = &logger->writers[i];
+		const struct jlogger_writer *writer = &logger->writers[i];
 		if (writer->fp == NULL || (writer->mask & tag) == 0) {
 			continue;
 		}

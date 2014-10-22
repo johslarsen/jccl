@@ -56,8 +56,8 @@ struct jlogger_writer {
 	enum jlog_timezone timezone;
 	enum jlog_field field_mask;
 
-	char *timestamp_format;
-	char *separator;
+	const char *timestamp_format;
+	const char *separator;
 };
 struct jlogger {
 	size_t nwriter;
@@ -77,6 +77,6 @@ struct jlogger {
 	}\
 }
 
-void jlog(struct jlogger *logger, enum jlog_tag tag, char *prefix, char *fmt, ...);
+void jlog(const struct jlogger *logger, enum jlog_tag tag, const char *prefix, const char *fmt, ...);
 
 #endif /*JLOG_H*/
