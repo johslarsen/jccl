@@ -49,7 +49,7 @@ enum jlog_timezone {
 };
 
 
-struct jlogger_entry {
+struct jlogger_writer {
 	FILE *fp;
 	unsigned long mask;
 
@@ -60,13 +60,13 @@ struct jlogger_entry {
 	char *separator;
 };
 struct jlogger {
-	size_t nentry;
-	struct jlogger_entry entries[];
+	size_t nwriter;
+	struct jlogger_writer writers[];
 };
-#define JLOG_STATIC_INIT(nentry, mask, timezone, field_mask) {\
-	nentry,\
+#define JLOG_STATIC_INIT(nwriter, mask, timezone, field_mask) {\
+	nwriter,\
 	{\
-		[0 ... nentry-1] = {\
+		[0 ... nwriter-1] = {\
 			NULL,\
 			mask,\
 			timezone,\
