@@ -25,8 +25,9 @@ test: $(TEST_SUITE)
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
-$(TEST_SUITE_SRC):
-	$(TEST_SUITE_GENERATOR) > $@
+.INTERMEDIATE: $(TEST_SUITE_SRC)
+$(TEST_SUITE_SRC): $(filter-out $(TEST_SUITE_SRC), $(SOURCES))
+	$(TEST_SUITE_GENERATOR) $^ > $@
 
 $(TEST_SUITE): $(OBJECTS) $(HEADERS)
 	$(CC) $(CFLAGS) $^ -o $@ $(LIBS)
