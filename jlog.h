@@ -42,7 +42,9 @@ enum jlog_field {
 	JLOG_FIELD_FILENAME =  1<<3,
 	JLOG_FIELD_FILEPOS =   1<<4,
 	JLOG_FIELD_MESSAGE =   1<<5,
-	JLOG_FIELD_ALL =      (1<<6)-1,
+
+	JLOG_FIELDS_ALL =      (1<<6)-1,
+	JLOG_FIELDS_MINIMAL =  JLOG_FIELD_TIMESTAMP | JLOG_FIELD_MESSAGE,
 };
 
 enum jlog_timezone {

@@ -67,7 +67,7 @@ void vjlogprintf(const struct jlogger *logger, enum jlog_tag tag, const char *pr
 }
 
 void TestJlogNoSegfaultOnInitializedStructure(CuTest *tc) {
-	static struct jlogger jlogger = JLOG_STATIC_INIT(1, JLOG_MASK_EVERYTHING, JLOG_TIMEZONE_UTC, JLOG_FIELD_ALL);
+	static struct jlogger jlogger = JLOG_STATIC_INIT(1, JLOG_MASK_EVERYTHING, JLOG_TIMEZONE_UTC, JLOG_FIELDS_ALL);
 	jlog(&jlogger, TWARN, NULL, "Where do I get printed?");
 }
 
@@ -77,7 +77,7 @@ void TestJlogMessageAndPrefixExists(CuTest *tc) {
 
 	FILE *fp = tmpfile();
 
-	static struct jlogger jlogger = JLOG_STATIC_INIT(2, JLOG_MASK_EVERYTHING, JLOG_TIMEZONE_UTC, JLOG_FIELD_ALL);
+	static struct jlogger jlogger = JLOG_STATIC_INIT(2, JLOG_MASK_EVERYTHING, JLOG_TIMEZONE_UTC, JLOG_FIELDS_ALL);
 	jlogger.writers[0].fp = fp;
 
 	jlog(&jlogger, TINFO, PREFIX, MSG);
@@ -102,7 +102,7 @@ void TestJlogMasking(CuTest *tc) {
 	FILE *everything = tmpfile();
 	FILE *warnings = tmpfile();
 
-	static struct jlogger jlogger = JLOG_STATIC_INIT(2, JLOG_MASK_EVERYTHING, JLOG_TIMEZONE_UTC, JLOG_FIELD_ALL);
+	static struct jlogger jlogger = JLOG_STATIC_INIT(2, JLOG_MASK_EVERYTHING, JLOG_TIMEZONE_UTC, JLOG_FIELDS_ALL);
 	jlogger.writers[0].fp = everything;
 	jlogger.writers[1].fp = warnings;
 	jlogger.writers[1].mask = JLOG_MASK_WARN;
@@ -126,7 +126,7 @@ void TestJlogFieldMask(CuTest *tc) {
 	FILE *normal = tmpfile();
 	FILE *without_tags = tmpfile();
 
-	static struct jlogger jlogger = JLOG_STATIC_INIT(2, JLOG_MASK_EVERYTHING, JLOG_TIMEZONE_UTC, JLOG_FIELD_ALL);
+	static struct jlogger jlogger = JLOG_STATIC_INIT(2, JLOG_MASK_EVERYTHING, JLOG_TIMEZONE_UTC, JLOG_FIELDS_ALL);
 	jlogger.writers[0].fp = normal;
 	jlogger.writers[1].fp = without_tags;
 	jlogger.writers[1].field_mask ^= JLOG_FIELD_TAG;
@@ -181,7 +181,7 @@ void TestJlogCustomTags(CuTest *tc) {
 	FILE *predefined = tmpfile();
 	FILE *custom = tmpfile();
 
-	static struct jlogger jlogger = JLOG_STATIC_INIT(2, JLOG_MASK_DEBUG, JLOG_TIMEZONE_UTC, JLOG_FIELD_ALL);
+	static struct jlogger jlogger = JLOG_STATIC_INIT(2, JLOG_MASK_DEBUG, JLOG_TIMEZONE_UTC, JLOG_FIELDS_ALL);
 	jlogger.writers[0].fp = predefined;
 	jlogger.writers[1].fp = custom;
 	jlogger.writers[1].mask |= CUSTOM_TAG;
