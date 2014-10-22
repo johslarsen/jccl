@@ -39,8 +39,10 @@ enum jlog_field {
 	JLOG_FIELD_TIMESTAMP = 1<<0,
 	JLOG_FIELD_TAG =       1<<1,
 	JLOG_FIELD_PREFIX =    1<<2,
-	JLOG_FIELD_MESSAGE =   1<<3,
-	JLOG_FIELD_ALL =      (1<<4)-1,
+	JLOG_FIELD_FILENAME =  1<<3,
+	JLOG_FIELD_FILEPOS =   1<<4,
+	JLOG_FIELD_MESSAGE =   1<<5,
+	JLOG_FIELD_ALL =      (1<<6)-1,
 };
 
 enum jlog_timezone {
@@ -55,7 +57,6 @@ struct jlogger_writer {
 
 	enum jlog_timezone timezone;
 	enum jlog_field field_mask;
-
 	const char *timestamp_format;
 	const char *separator;
 };
@@ -77,6 +78,12 @@ struct jlogger {
 	}\
 }
 
-void jlog(const struct jlogger *logger, enum jlog_tag tag, const char *prefix, const char *fmt, ...);
+void vjlogprintf(const struct jlogger *logger, enum jlog_tag tag, const char *prefix, const char *filename, size_t linenumber, const char *fmt, ...);
+
+#ifdef JLOG_DISABLE
+#define jlog(logger, tag, prefix, ...) (void)0;
+#else
+#define jlog(logger, tag, prefix, ...) vjlogprintf(logger, tag, prefix, __FILE__, __LINE__, __VA_ARGS__)
+#endif /*JLOG_DISABLE*/
 
 #endif /*JLOG_H*/

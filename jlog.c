@@ -7,7 +7,7 @@
 #include "jlog.h"
 #include "CuTest/CuTest.h"
 
-void jlog(const struct jlogger *logger, enum jlog_tag tag, const char *prefix, const char *fmt, ...) {
+void vjlogprintf(const struct jlogger *logger, enum jlog_tag tag, const char *prefix, const char *filename, size_t linenumber, const char *fmt, ...) {
 	va_list original_args;
 	va_start(original_args, fmt);
 	int i;
@@ -45,6 +45,12 @@ void jlog(const struct jlogger *logger, enum jlog_tag tag, const char *prefix, c
 		if (writer->field_mask & JLOG_FIELD_PREFIX) {
 			fprintf(writer->fp, "%s%s", prefix_separator?writer->separator:"", prefix == NULL ? "" : prefix);
 			prefix_separator = 1;
+		}
+		if (writer->field_mask & JLOG_FIELD_FILENAME) {
+			fprintf(writer->fp, "%s%s", prefix_separator?writer->separator:"", filename);
+		}
+		if (writer->field_mask & JLOG_FIELD_FILEPOS) {
+			fprintf(writer->fp, "%s%lu", prefix_separator?writer->separator:"", linenumber);
 		}
 		if (writer->field_mask & JLOG_FIELD_MESSAGE) {
 			fprintf(writer->fp, "%s", prefix_separator?writer->separator:"");
@@ -133,10 +139,10 @@ void TestJlogFieldMask(CuTest *tc) {
 	size_t nread;
 	nread = fread(buf, 1, sizeof(buf), normal);
 	buf[nread] = '\0';
-	CuAssertIntEquals(tc, 3, strcount(buf, JLOG_DEFAULT_SEPARATOR));
+	CuAssertIntEquals(tc, 5, strcount(buf, JLOG_DEFAULT_SEPARATOR));
 	nread = fread(buf, 1, sizeof(buf), without_tags);
 	buf[nread] = '\0';
-	CuAssertIntEquals(tc, 2, strcount(buf, JLOG_DEFAULT_SEPARATOR));
+	CuAssertIntEquals(tc, 4, strcount(buf, JLOG_DEFAULT_SEPARATOR));
 }
 
 void TestJlogTimeformatAndTimezone(CuTest *tc) {
