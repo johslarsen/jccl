@@ -38,7 +38,6 @@ struct bigint {
 static struct bigint *bigint_init(int nchunk)
 {
 	assert(nchunk > 0);
-
 	struct bigint *n = (struct bigint *)malloc(sizeof(*n));
 	if (n == NULL) {
 		return NULL;
@@ -378,7 +377,7 @@ void TestBigintCreationAndHextring(CuTest *tc)
 	};
 
 	const unsigned long n_uint = (1UL<<31) - 1;
-	const char const *n_hexstring =          "000000007fffffff";
+	char const * const n_hexstring =          "000000007fffffff";
 	size_t n_hexstring_len = strlen(n_hexstring);
 
 	struct bigint *bns[3];
@@ -395,8 +394,8 @@ void TestBigintCreationAndHextring(CuTest *tc)
 		bigint_destroy(bns[i]);
 	}
 
-	const char const *multi_long_hexstring =                    "effffffffffffffff";
-	const char const *multi_long_hexstring_res = "fffffffffffffffeffffffffffffffff";
+	char const * const multi_long_hexstring =                    "effffffffffffffff";
+	char const * const multi_long_hexstring_res = "fffffffffffffffeffffffffffffffff";
 	size_t multi_long_hexstring_res_len = strlen(multi_long_hexstring_res);
 
 	CuAssertPtrNotNull(tc, (bns[0] = bigint_from_msb_first_hexstring(multi_long_hexstring, 17)));
