@@ -35,8 +35,7 @@ struct bigint {
 };
 
 
-static struct bigint *bigint_init(int nchunk)
-{
+static struct bigint *bigint_init(int nchunk) {
 	assert(nchunk > 0);
 	struct bigint *n = (struct bigint *)malloc(sizeof(*n));
 	if (n == NULL) {
@@ -52,8 +51,7 @@ static struct bigint *bigint_init(int nchunk)
 
 	return n;
 }
-void TestBigint_init(CuTest *tc)
-{
+void TestBigint_init(CuTest *tc) {
 	int i;
 	for (i = 1; i <= 10; i++) {
 		struct bigint *n = bigint_init(i);
@@ -66,13 +64,11 @@ void TestBigint_init(CuTest *tc)
 }
 
 
-static unsigned long bigint_index_with_padding(const struct bigint *n, unsigned int i)
-{
+static unsigned long bigint_index_with_padding(const struct bigint *n, unsigned int i) {
 	assert(n != NULL);
 	return i < n->nchunk ? n->chunks[i] : n->pad_chunk;
 }
-void TestBigint_index_with_padding(CuTest *tc)
-{
+void TestBigint_index_with_padding(CuTest *tc) {
 	struct bigint *positive = bigint_from_long(pad_chunks[0]);
 	CuAssertPtrNotNull(tc, positive);
 	struct bigint *negative = bigint_from_long(pad_chunks[1]);
@@ -90,13 +86,11 @@ void TestBigint_index_with_padding(CuTest *tc)
 }
 
 
-static int bigint_msb(const struct bigint *n, int i)
-{
+static int bigint_msb(const struct bigint *n, int i) {
 	assert(n != NULL);
 	return bigint_index_with_padding(n, i) >> LONG_MSB;
 }
-void TestBigint_msb(CuTest *tc)
-{
+void TestBigint_msb(CuTest *tc) {
 	struct bigint *positive = bigint_from_long(LONG_MAX);
 	CuAssertPtrNotNull(tc, positive);
 	struct bigint *negative = bigint_from_long(LONG_MIN);
@@ -113,8 +107,7 @@ void TestBigint_msb(CuTest *tc)
 }
 
 
-void bigint_destroy(struct bigint *n)
-{
+void bigint_destroy(struct bigint *n) {
 	if (n != NULL) {
 		free(n->chunks);
 		free(n);
@@ -137,8 +130,7 @@ struct bigint *bigint_copy(const struct bigint *n) {
 
 	return res;
 }
-void TestBigint_copy(CuTest *tc)
-{
+void TestBigint_copy(CuTest *tc) {
 	struct bigint *single_chunk_n = bigint_from_long(pad_chunks[1]);
 	CuAssertPtrNotNull(tc, single_chunk_n);
 	struct bigint *multi_chunk_n = bigint_from_msb_first_hexstring("0ffffffffffffffffffffffffffffffffffff", 0);
@@ -159,8 +151,7 @@ void TestBigint_copy(CuTest *tc)
 }
 
 
-static void bigint_identify_pad_chunk_and_trim(struct bigint *n)
-{
+static void bigint_identify_pad_chunk_and_trim(struct bigint *n) {
 	if (n == NULL) {
 		return;
 	}
@@ -188,8 +179,7 @@ static void bigint_identify_pad_chunk_and_trim(struct bigint *n)
 		}
 	}
 }
-void TestBigint_identify_pad_chunk_and_trim(CuTest *tc)
-{
+void TestBigint_identify_pad_chunk_and_trim(CuTest *tc) {
 	struct bigint *untrimable_positive = bigint_init(2);
 	CuAssertPtrNotNull(tc, untrimable_positive);
 	struct bigint *untrimable_negative = bigint_init(2);
@@ -230,8 +220,7 @@ void TestBigint_identify_pad_chunk_and_trim(CuTest *tc)
 }
 
 
-struct bigint *bigint_from_long(unsigned long n)
-{
+struct bigint *bigint_from_long(unsigned long n) {
 	struct bigint *bigint = bigint_init(1);
 	if (bigint == NULL) {
 		return NULL;
@@ -242,8 +231,7 @@ struct bigint *bigint_from_long(unsigned long n)
 	bigint_identify_pad_chunk_and_trim(bigint);
 	return bigint;
 }
-void TestBigint_from_long(CuTest *tc)
-{
+void TestBigint_from_long(CuTest *tc) {
 	unsigned long a_number = 1337;
 	struct bigint *n = bigint_from_long(a_number);
 
@@ -255,8 +243,7 @@ void TestBigint_from_long(CuTest *tc)
 }
 
 
-int bigint_to_long(const struct bigint *n, unsigned long *result)
-{
+int bigint_to_long(const struct bigint *n, unsigned long *result) {
 	if (n == NULL || result == NULL) {
 		return EINVAL;
 	}
@@ -265,8 +252,7 @@ int bigint_to_long(const struct bigint *n, unsigned long *result)
 
 	return n->nchunk > 1 ? ERANGE : 0;
 }
-void TestBigint_to_long(CuTest *tc)
-{
+void TestBigint_to_long(CuTest *tc) {
 	unsigned long a_number = 1337;
 	struct bigint *n = bigint_from_long(a_number);
 	CuAssertPtrNotNull(tc, n);
@@ -326,12 +312,10 @@ error:
 }
 
 
-int bigint_nnibble(const struct bigint *n)
-{
+int bigint_nnibble(const struct bigint *n) {
 	return n == NULL ? -EINVAL : n->nchunk*NNIBBLE_IN_LONG;
 }
-void TestBigint_nnibble(CuTest *tc)
-{
+void TestBigint_nnibble(CuTest *tc) {
 	int i;
 	for (i = 1; i < 10; i++) {
 		struct bigint *n = bigint_init(i);
@@ -345,8 +329,7 @@ void TestBigint_nnibble(CuTest *tc)
 }
 
 
-int bigint_to_msb_first_hexstring(const struct bigint *n, char *s)
-{
+int bigint_to_msb_first_hexstring(const struct bigint *n, char *s) {
 	if (n == NULL || s == NULL) {
 		return -EINVAL;
 	}
@@ -370,8 +353,7 @@ int bigint_to_msb_first_hexstring(const struct bigint *n, char *s)
 }
 
 
-void TestBigintCreationAndHextring(CuTest *tc)
-{
+void TestBigintCreationAndHextring(CuTest *tc) {
 	enum {
 		RES_LEN = 128,
 	};
@@ -437,8 +419,7 @@ int bigint_compare(const struct bigint *a, const struct bigint *b) {
 
 	return 0;
 }
-void TestBigint_compare(CuTest *tc)
-{
+void TestBigint_compare(CuTest *tc) {
 	struct bigint *zero = bigint_from_long(0), *four = bigint_from_long(4);
 	CuAssertPtrNotNull(tc, zero);
 	CuAssertPtrNotNull(tc, four);
@@ -487,8 +468,7 @@ void TestBigint_compare(CuTest *tc)
 }
 
 
-struct bigint *bigint_not(const struct bigint *n)
-{
+struct bigint *bigint_not(const struct bigint *n) {
 	if (n == NULL) {
 		return NULL;
 	}
@@ -505,8 +485,7 @@ struct bigint *bigint_not(const struct bigint *n)
 }
 
 
-struct bigint *bigint_and(const struct bigint *a, const struct bigint *b)
-{
+struct bigint *bigint_and(const struct bigint *a, const struct bigint *b) {
 	if (a == NULL || b == NULL) {
 		return NULL;
 	}
@@ -528,8 +507,7 @@ struct bigint *bigint_and(const struct bigint *a, const struct bigint *b)
 }
 
 
-struct bigint *bigint_or(const struct bigint *a, const struct bigint *b)
-{
+struct bigint *bigint_or(const struct bigint *a, const struct bigint *b) {
 	if (a == NULL || b == NULL) {
 		return NULL;
 	}
@@ -551,8 +529,7 @@ struct bigint *bigint_or(const struct bigint *a, const struct bigint *b)
 }
 
 
-struct bigint *bigint_xor(const struct bigint *a, const struct bigint *b)
-{
+struct bigint *bigint_xor(const struct bigint *a, const struct bigint *b) {
 	if (a == NULL || b == NULL) {
 		return NULL;
 	}
@@ -574,8 +551,7 @@ struct bigint *bigint_xor(const struct bigint *a, const struct bigint *b)
 }
 
 
-void TestBigintBitwiseOperators(CuTest *tc)
-{
+void TestBigintBitwiseOperators(CuTest *tc) {
 	enum {
 		NHEXSTRING=7,
 		RES_LEN = 32+1,
@@ -619,8 +595,7 @@ void TestBigintBitwiseOperators(CuTest *tc)
 }
 
 
-struct bigint *bigint_shift_left(const struct bigint *a, const struct bigint *b)
-{
+struct bigint *bigint_shift_left(const struct bigint *a, const struct bigint *b) {
 	if (a == NULL || b == NULL) {
 		return NULL;
 	}
@@ -658,8 +633,7 @@ struct bigint *bigint_shift_left(const struct bigint *a, const struct bigint *b)
 }
 
 
-struct bigint *bigint_shift_right(const struct bigint *a, const struct bigint *b)
-{
+struct bigint *bigint_shift_right(const struct bigint *a, const struct bigint *b) {
 	if (a == NULL || b == NULL) {
 		return NULL;
 	}
@@ -698,8 +672,7 @@ struct bigint *bigint_shift_right(const struct bigint *a, const struct bigint *b
 }
 
 
-void TestBigintBitshift(CuTest *tc)
-{
+void TestBigintBitshift(CuTest *tc) {
 	enum {
 		NHEXSTRING = 9,
 		RES_LEN = 64+1,
@@ -775,8 +748,7 @@ cleanup:
 }
 
 
-struct bigint *bigint_abs(const struct bigint *n)
-{
+struct bigint *bigint_abs(const struct bigint *n) {
 	if (n == NULL) {
 		return NULL;
 	}
@@ -785,8 +757,7 @@ struct bigint *bigint_abs(const struct bigint *n)
 }
 
 
-struct bigint *bigint_add(const struct bigint *a, const struct bigint *b)
-{
+struct bigint *bigint_add(const struct bigint *a, const struct bigint *b) {
 	if (a == NULL || b == NULL) {
 		return NULL;
 	}
@@ -811,8 +782,7 @@ struct bigint *bigint_add(const struct bigint *a, const struct bigint *b)
 }
 
 
-struct bigint *bigint_subtract(const struct bigint *a, const struct bigint *b)
-{
+struct bigint *bigint_subtract(const struct bigint *a, const struct bigint *b) {
 	if (a == NULL || b == NULL) {
 		return NULL;
 	}
@@ -829,8 +799,7 @@ struct bigint *bigint_subtract(const struct bigint *a, const struct bigint *b)
 }
 
 
-void TestBigintArithmeticOperators(CuTest *tc)
-{
+void TestBigintArithmeticOperators(CuTest *tc) {
 	enum {
 		NHEXSTRING = 10,
 		RES_LEN = 32+1,
@@ -883,8 +852,7 @@ void TestBigintArithmeticOperators(CuTest *tc)
 }
 
 
-void TestBigintErroneousInput(CuTest *tc)
-{
+void TestBigintErroneousInput(CuTest *tc) {
 	struct bigint *single_chunk_n = bigint_from_long(pad_chunks[1]);
 	CuAssertPtrNotNull(tc, single_chunk_n);
 	struct bigint *multi_chunk_n = bigint_from_msb_first_hexstring("0ffffffffffffffffffffffffffffff", 0);

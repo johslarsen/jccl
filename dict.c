@@ -24,14 +24,12 @@ struct subtree end_of_tree_sentinel = {.left = &end_of_tree_sentinel, .right = &
 #define EOT(node) ((struct subtree *)(node) == (&end_of_tree_sentinel))
 
 
-static int compare_pointers(const void *a, const void *b)
-{
+static int compare_pointers(const void *a, const void *b) {
 	return (int)(a-b);
 }
 
 
-static struct subtree *node_init(const void *key, const void *value)
-{
+static struct subtree *node_init(const void *key, const void *value) {
 	struct subtree *node = malloc(sizeof(*node));
 	if (node == NULL) {
 		return NULL;
@@ -48,8 +46,7 @@ static struct subtree *node_init(const void *key, const void *value)
 }
 
 
-static void node_destroy(struct subtree *node)
-{
+static void node_destroy(struct subtree *node) {
 	assert(node != NULL);
 	// NOTE: assuming children are destroyed
 
@@ -59,8 +56,7 @@ static void node_destroy(struct subtree *node)
 }
 
 
-void TestNodeConstructionAndDestruction(CuTest *tc)
-{
+void TestNodeConstructionAndDestruction(CuTest *tc) {
 	int key = 0xdeadbeef;
 	int value = 0xc0ffee;
 
@@ -77,8 +73,7 @@ void TestNodeConstructionAndDestruction(CuTest *tc)
 }
 
 
-struct dict *dict_init(dict_comparator compar)
-{
+struct dict *dict_init(dict_comparator compar) {
 	if (compar == NULL) {
 		return NULL;
 	}
@@ -95,8 +90,7 @@ struct dict *dict_init(dict_comparator compar)
 }
 
 
-static void subtree_destroy(struct subtree *head)
-{
+static void subtree_destroy(struct subtree *head) {
 	assert(head != NULL);
 	if (EOT(head)) {
 		return;
@@ -108,8 +102,7 @@ static void subtree_destroy(struct subtree *head)
 	node_destroy(head);
 }
 
-void dict_destroy(struct dict *dict)
-{
+void dict_destroy(struct dict *dict) {
 	if (dict != NULL) {
 		subtree_destroy(dict->head);
 		free(dict);
@@ -117,20 +110,17 @@ void dict_destroy(struct dict *dict)
 }
 
 
-static int subtree_size(struct subtree *head)
-{
+static int subtree_size(struct subtree *head) {
 	assert(head != NULL);
 	return head->nnode;
 }
 
-int dict_size(struct dict *dict)
-{
+int dict_size(struct dict *dict) {
 	return dict == NULL ? -EINVAL : subtree_size(dict->head);
 }
 
 
-void TestDictConstructionAndDestruction(CuTest *tc)
-{
+void TestDictConstructionAndDestruction(CuTest *tc) {
 	struct dict *dict = dict_init(compare_pointers);
 	CuAssertPtrNotNull(tc, dict);
 
@@ -145,16 +135,14 @@ enum {
 	NNODE_2_LAYER_BALANCED_TREE = 3,
 	NNODE_3_LAYER_BALANCED_TREE = 7,
 };
-static struct subtree *dummy_1_layer_balanced_tree(struct subtree *a_node)
-{
+static struct subtree *dummy_1_layer_balanced_tree(struct subtree *a_node) {
 	assert(a_node != NULL && !EOT(a_node));
 
 	struct subtree *first   = a_node+0;      first->key   = (void *)1; first->nnode   = 1; first->left   = &end_of_tree_sentinel; first->right   = &end_of_tree_sentinel;
 
 	return first;
 }
-static struct subtree *dummy_2_layer_balanced_tree(struct subtree *three_nodes)
-{
+static struct subtree *dummy_2_layer_balanced_tree(struct subtree *three_nodes) {
 	assert(three_nodes != NULL && !EOT(three_nodes));
 
 	struct subtree *first   = three_nodes+0; first->key   = (void *)1; first->nnode   = 1; first->left   = &end_of_tree_sentinel; first->right   = &end_of_tree_sentinel;
@@ -163,8 +151,7 @@ static struct subtree *dummy_2_layer_balanced_tree(struct subtree *three_nodes)
 
 	return second;
 }
-static struct subtree *dummy_3_layer_balanced_tree(struct subtree *seven_nodes)
-{
+static struct subtree *dummy_3_layer_balanced_tree(struct subtree *seven_nodes) {
 	assert(seven_nodes != NULL && !EOT(seven_nodes));
 
 	struct subtree *first   = seven_nodes+0; first->key   = (void *)1; first->nnode   = 1; first->left   = &end_of_tree_sentinel; first->right   = &end_of_tree_sentinel;
@@ -177,8 +164,7 @@ static struct subtree *dummy_3_layer_balanced_tree(struct subtree *seven_nodes)
 
 	return fourth;
 }
-void TestDictDummyBalancedDicts(CuTest *tc)
-{
+void TestDictDummyBalancedDicts(CuTest *tc) {
 	struct subtree nodes[7];
 
 	struct subtree *head = dummy_1_layer_balanced_tree(nodes);
@@ -222,8 +208,7 @@ struct node_position {
 	struct subtree *node;
 	int depth;
 };
-static void subtree_fill_positions(struct subtree *head, struct node_position *lines, int depth, int nnode_parent)
-{
+static void subtree_fill_positions(struct subtree *head, struct node_position *lines, int depth, int nnode_parent) {
 	assert(head != NULL && lines != NULL);
 	if (EOT(head)) {
 		return;
@@ -235,8 +220,7 @@ static void subtree_fill_positions(struct subtree *head, struct node_position *l
 	line->depth = depth;
 	subtree_fill_positions(head->right, lines, depth+1, nnode_parent + head->left->nnode + 1);
 }
-static void subtree_print(FILE *stream, struct subtree *head, int minimal)
-{
+static void subtree_print(FILE *stream, struct subtree *head, int minimal) {
 	assert(head != NULL);
 	struct node_position *lines = calloc(head->nnode, sizeof(*lines));
 	if (lines == NULL) {
@@ -246,8 +230,7 @@ static void subtree_print(FILE *stream, struct subtree *head, int minimal)
 	subtree_fill_positions(head, lines, 0, 0);
 
 	int i;
-	for (i = 0; i < head->nnode; i++)
-	{
+	for (i = 0; i < head->nnode; i++) {
 		struct node_position *line = lines+i;
 		int j;
 		for (j = 0; j < line->depth; j++) {
@@ -269,16 +252,14 @@ static void subtree_print(FILE *stream, struct subtree *head, int minimal)
 #endif
 
 
-static void node_reconstruct_nnode(struct subtree *node)
-{
+static void node_reconstruct_nnode(struct subtree *node) {
 	assert(node != NULL && !EOT(node));
 	// NOTE: assuming nnode in children is correct
 
 	node->nnode = node->left->nnode + 1 + node->right->nnode;
 }
 
-static void subtree_reconstruct_nnode(struct subtree *head)
-{
+static void subtree_reconstruct_nnode(struct subtree *head) {
 	assert(head != NULL);
 	if (EOT(head)) {
 		return;
@@ -288,8 +269,7 @@ static void subtree_reconstruct_nnode(struct subtree *head)
 	subtree_reconstruct_nnode(head->right);
 	node_reconstruct_nnode(head);
 }
-void TestSubtree_reconstruct_nnode(CuTest *tc)
-{
+void TestSubtree_reconstruct_nnode(CuTest *tc) {
 	struct subtree nodes[NNODE_3_LAYER_BALANCED_TREE];
 	struct subtree *head = dummy_3_layer_balanced_tree(nodes);
 
@@ -304,8 +284,7 @@ void TestSubtree_reconstruct_nnode(CuTest *tc)
 }
 
 
-static struct subtree *subtree_rotate_right(struct subtree *head)
-{
+static struct subtree *subtree_rotate_right(struct subtree *head) {
 	assert(head != NULL);
 	assert(!EOT(head) && !EOT(head->left));
 
@@ -318,8 +297,7 @@ static struct subtree *subtree_rotate_right(struct subtree *head)
 
 	return left;
 }
-void TestSubtree_rotate_right(CuTest *tc)
-{
+void TestSubtree_rotate_right(CuTest *tc) {
 	struct subtree nodes[NNODE_3_LAYER_BALANCED_TREE];
 	struct subtree *head = dummy_3_layer_balanced_tree(nodes);
 
@@ -337,8 +315,7 @@ void TestSubtree_rotate_right(CuTest *tc)
 }
 
 
-static struct subtree *subtree_rotate_left(struct subtree *head)
-{
+static struct subtree *subtree_rotate_left(struct subtree *head) {
 	assert(head != NULL);
 	assert(!EOT(head) && !EOT(head->right));
 
@@ -351,8 +328,7 @@ static struct subtree *subtree_rotate_left(struct subtree *head)
 
 	return right;
 }
-void TestSubtree_rotate_left(CuTest *tc)
-{
+void TestSubtree_rotate_left(CuTest *tc) {
 	struct subtree nodes[NNODE_3_LAYER_BALANCED_TREE];
 	struct subtree *head = dummy_3_layer_balanced_tree(nodes);
 
@@ -370,8 +346,7 @@ void TestSubtree_rotate_left(CuTest *tc)
 }
 
 
-static struct subtree *skew(struct subtree *head)
-{
+static struct subtree *skew(struct subtree *head) {
 	assert(head != NULL && !EOT(head));
 
 	if (head->level == head->left->level) {
@@ -380,8 +355,7 @@ static struct subtree *skew(struct subtree *head)
 
 	return head;
 }
-static struct subtree *split(struct subtree *head)
-{
+static struct subtree *split(struct subtree *head) {
 	assert(head != NULL && !EOT(head));
 
 	if (head->level == head->right->right->level) {
@@ -393,8 +367,7 @@ static struct subtree *split(struct subtree *head)
 }
 
 
-static struct subtree *subtree_put(struct subtree *head, dict_comparator compar, void const *key, void const *value, void **nkey, void **nvalue, int *status)
-{
+static struct subtree *subtree_put(struct subtree *head, dict_comparator compar, void const *key, void const *value, void **nkey, void **nvalue, int *status) {
 	if (EOT(head)) {
 		struct subtree *new = node_init(key, value);
 		if (new == NULL) {
@@ -435,8 +408,7 @@ static struct subtree *subtree_put(struct subtree *head, dict_comparator compar,
 	return head;
 }
 
-int dict_put(struct dict *dict, void const *key, void const *value, void **nkey, void **nvalue)
-{
+int dict_put(struct dict *dict, void const *key, void const *value, void **nkey, void **nvalue) {
 	if (dict == NULL || key == NULL) {
 		return EINVAL;
 	}
@@ -452,8 +424,7 @@ int dict_put(struct dict *dict, void const *key, void const *value, void **nkey,
 	return 0;
 }
 
-void TestDict_put(CuTest *tc)
-{
+void TestDict_put(CuTest *tc) {
 	struct dict *dict = dict_init(compare_pointers);
 	CuAssertPtrNotNull(tc, dict);
 
@@ -485,8 +456,7 @@ void TestDict_put(CuTest *tc)
 }
 
 
-static void *subtree_get(struct subtree *head, dict_comparator compar, void const *key, int *index_of_key)
-{
+static void *subtree_get(struct subtree *head, dict_comparator compar, void const *key, int *index_of_key) {
 	assert(key != NULL);
 	int le_valued_keys_skipped = 0;
 
@@ -511,16 +481,14 @@ static void *subtree_get(struct subtree *head, dict_comparator compar, void cons
 	return NULL;
 }
 
-void *dict_get(struct dict *dict, void const *key, int *index_of_key)
-{
+void *dict_get(struct dict *dict, void const *key, int *index_of_key) {
 	if (dict == NULL || key == NULL) {
 		return NULL;
 	}
 
 	return subtree_get(dict->head, dict->compar, key, index_of_key);
 }
-void TestDict_get(CuTest *tc)
-{
+void TestDict_get(CuTest *tc) {
 	struct dict *dict = dict_init(compare_pointers);
 	CuAssertPtrNotNull(tc, dict);
 
@@ -564,8 +532,7 @@ void TestDict_get(CuTest *tc)
 extern int dict_remove(struct dict *dict, void const *key, void **nkey, void **nvalue);
 
 
-static int subtree_select(struct subtree *head, dict_comparator compar, int i, void **key, void **value)
-{
+static int subtree_select(struct subtree *head, dict_comparator compar, int i, void **key, void **value) {
 	assert(key != NULL && value != NULL);
 
 	if (i < 0) {
@@ -593,16 +560,14 @@ static int subtree_select(struct subtree *head, dict_comparator compar, int i, v
 	return ESRCH;
 }
 
-int dict_select(struct dict *dict, int i, void **key, void **value)
-{
+int dict_select(struct dict *dict, int i, void **key, void **value) {
 	if (dict == NULL || key == NULL || value == NULL) {
 		return EINVAL;
 	}
 
 	return subtree_select(dict->head, dict->compar, i, key, value);
 }
-void TestDict_select(CuTest *tc)
-{
+void TestDict_select(CuTest *tc) {
 	struct dict *dict = dict_init(compare_pointers);
 	CuAssertPtrNotNull(tc, dict);
 
@@ -641,8 +606,7 @@ void TestDict_select(CuTest *tc)
 }
 
 
-static int subtree_for_each(struct subtree *head, dict_action action, void *state)
-{
+static int subtree_for_each(struct subtree *head, dict_action action, void *state) {
 	if (EOT(head)) {
 		return 0;
 	}
@@ -658,8 +622,7 @@ static int subtree_for_each(struct subtree *head, dict_action action, void *stat
 	return subtree_for_each(head->right, action, state);
 }
 
-int dict_for_each(struct dict *dict, dict_action action, void *state)
-{
+int dict_for_each(struct dict *dict, dict_action action, void *state) {
 	if (dict == NULL || action == NULL) {
 		return EINVAL;
 	}
@@ -672,8 +635,7 @@ struct dict_action_dump_state {
 	void const *keys[NNODE_3_LAYER_BALANCED_TREE];
 	void const *values[NNODE_3_LAYER_BALANCED_TREE];
 };
-static int dict_action_dump(void const *key, void const *value, void *state)
-{
+static int dict_action_dump(void const *key, void const *value, void *state) {
 	struct dict_action_dump_state *known_state = (struct dict_action_dump_state *)state;
 	int n = known_state->n++;
 	known_state->keys[n] = key;
@@ -682,8 +644,7 @@ static int dict_action_dump(void const *key, void const *value, void *state)
 	return 0;
 }
 
-void TestDict_for_each(CuTest *tc)
-{
+void TestDict_for_each(CuTest *tc) {
 	struct dict *dict = dict_init(compare_pointers);
 	CuAssertPtrNotNull(tc, dict);
 
@@ -715,15 +676,13 @@ struct dict_action_abort_after_state {
 	int ncall;
 	int abort_after;
 };
-static int dict_action_abort_after(void const *key, void const *value, void *state)
-{
+static int dict_action_abort_after(void const *key, void const *value, void *state) {
 	struct dict_action_abort_after_state *known_state = (struct dict_action_abort_after_state *)state;
 	known_state->ncall++;
 	return known_state->ncall >= known_state->abort_after ? known_state->abort_after : 0;
 }
 
-void TestDict_for_eachWithAbortion(CuTest *tc)
-{
+void TestDict_for_eachWithAbortion(CuTest *tc) {
 	struct dict *dict = dict_init(compare_pointers);
 	CuAssertPtrNotNull(tc, dict);
 

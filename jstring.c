@@ -10,8 +10,7 @@
 #define ZERO_THROUGH_NINE "0123456789"
 
 #ifndef strnchr // this is based on the linux interface, https://www.kernel.org/doc/htmldocs/kernel-api/API-strnchr.html
-char *strnchr(const char *s, size_t count, int c)
-{
+char *strnchr(const char *s, size_t count, int c) {
 	if (s == NULL || count == 0) {
 		return NULL;
 	}
@@ -26,8 +25,7 @@ char *strnchr(const char *s, size_t count, int c)
 	return NULL;
 }
 #endif /*strnchr*/
-void TestStrnchr(CuTest *tc)
-{
+void TestStrnchr(CuTest *tc) {
 	char s[] = LOWER_CASE_US_ALPHABET;
 
 	CuAssertPtrEquals(tc, NULL, strnchr(s, sizeof(s), -1));
@@ -44,8 +42,7 @@ void TestStrnchr(CuTest *tc)
 }
 
 #ifndef strnstr // this is based on the linux interface, https://www.kernel.org/doc/htmldocs/kernel-api/API-strnchr.html
-char *strnstr(const char *s1, const char *s2, size_t len)
-{
+char *strnstr(const char *s1, const char *s2, size_t len) {
 	if (s1 == NULL || s2 == NULL) {
 		return NULL;
 	}
@@ -61,8 +58,7 @@ char *strnstr(const char *s1, const char *s2, size_t len)
 	return NULL;
 }
 #endif /*strnstr*/
-void TestStrnstr(CuTest *tc)
-{
+void TestStrnstr(CuTest *tc) {
 	char s[] = LOWER_CASE_US_ALPHABET;
 
 	CuAssertStrEquals(tc, s, strnstr(s, "", 0));
@@ -87,8 +83,7 @@ void TestStrnstr(CuTest *tc)
 }
 
 
-static char *end_of_quoted_string_escaped_by_double_quotes(const char *s, size_t count, char quote)
-{
+static char *end_of_quoted_string_escaped_by_double_quotes(const char *s, size_t count, char quote) {
 	while (count > 0) {
 		const char *next_quote = strnchr(s, count, quote);
 		if (next_quote == NULL) {
@@ -106,8 +101,7 @@ static char *end_of_quoted_string_escaped_by_double_quotes(const char *s, size_t
 	return NULL;
 }
 
-char *end_of_quoted_string(const char *s, size_t count, char quote, char escape)
-{
+char *end_of_quoted_string(const char *s, size_t count, char quote, char escape) {
 	if (s == NULL) {
 		return NULL;
 	}
@@ -138,8 +132,7 @@ char *end_of_quoted_string(const char *s, size_t count, char quote, char escape)
 
 	return NULL;
 }
-void TestEnd_of_quoted_string(CuTest *tc)
-{
+void TestEnd_of_quoted_string(CuTest *tc) {
 	char s[] = "\"\\\"\\\\\\\"\\\\\\\\\"";
 	size_t count = sizeof(s)-1; // -'\0'
 
@@ -150,8 +143,7 @@ void TestEnd_of_quoted_string(CuTest *tc)
 	CuAssertPtrEquals(tc, NULL, end_of_quoted_string(s+1, count-2, '\"', '\\'));
 	CuAssertPtrEquals(tc, last_quote, end_of_quoted_string(s+1, count-1, '\"', '\\'));
 }
-void TestEnd_of_quoted_stringWithQuoteAsEscape(CuTest *tc)
-{
+void TestEnd_of_quoted_stringWithQuoteAsEscape(CuTest *tc) {
 	char s[] = "\"\"\"\"";
 	size_t count = sizeof(s)-1; // -'\0'
 
@@ -171,8 +163,7 @@ void TestEnd_of_quoted_stringWithEmptyString(CuTest *tc) {
 }
 
 
-char *strncpy_with_modifier(char *dest, const char *src, size_t count, character_modifier modifier)
-{
+char *strncpy_with_modifier(char *dest, const char *src, size_t count, character_modifier modifier) {
 	if (dest == NULL || src == NULL) {
 		return dest;
 	}
@@ -188,8 +179,7 @@ char *strncpy_with_modifier(char *dest, const char *src, size_t count, character
 
 	return original_dest;
 }
-void TestStrncpy_with_modifier(CuTest *tc)
-{
+void TestStrncpy_with_modifier(CuTest *tc) {
 	char buf[200];
 	char some_camelcase[] = "SoMeCaMeLCaSe";
 	CuAssertStrEquals(tc, "somecamelcase", strncpy_with_modifier(buf, some_camelcase, sizeof(some_camelcase), tolower));

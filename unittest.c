@@ -3,14 +3,12 @@
 #include <stdlib.h>
 #include <time.h>
 
-void unittest_fail(const char *expr, const char *file, unsigned int line, const char *func)
-{
+void unittest_fail(const char *expr, const char *file, unsigned int line, const char *func) {
 	fprintf(stderr, "%s:%i: %s: Unittest '%s' failed\n", file, line, func, expr);
 }
 
 
-int acquire_seed(char *seed_from_argument)
-{
+int acquire_seed(char *seed_from_argument) {
 	int seed;
 	FILE *dev_random;
 	if (seed_from_argument != NULL) {
@@ -26,8 +24,7 @@ int acquire_seed(char *seed_from_argument)
 }
 
 
-int acquire_and_print_seed(FILE *fp, char *seed_from_argument)
-{
+int acquire_and_print_seed(FILE *fp, char *seed_from_argument) {
 	int seed = acquire_seed(seed_from_argument);
 	fprintf(fp, "seed: %d\n", seed);
 	return seed;

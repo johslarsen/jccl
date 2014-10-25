@@ -13,24 +13,21 @@ enum {
 	TEST_NINITIAL = 0x10,
 };
 
-void dbuf_init(struct dbuf *buf, size_t initial_n)
-{
+void dbuf_init(struct dbuf *buf, size_t initial_n) {
 	if (buf != NULL) {
 		static const struct dbuf template = DBUF_STATIC_INIT(0);
 		memmove(buf, &template, sizeof(template));
 		buf->n = initial_n;
 	}
 }
-void dbuf_destroy(struct dbuf *buf)
-{
+void dbuf_destroy(struct dbuf *buf) {
 	if (buf != NULL) {
 		free(buf->b);
 
 		// NOTE: buf is allocated by caller, so caller is responsible for deallocating it
 	}
 }
-void TestDbufInitAndDestroy(CuTest *tc)
-{
+void TestDbufInitAndDestroy(CuTest *tc) {
 	struct dbuf sbuf = DBUF_STATIC_INIT(TEST_NINITIAL);
 	static struct dbuf rbuf;
 
@@ -49,8 +46,7 @@ void TestDbufInitAndDestroy(CuTest *tc)
 }
 
 
-int dbuf_grow_to(struct dbuf *buf, size_t new_n)
-{
+int dbuf_grow_to(struct dbuf *buf, size_t new_n) {
 	if (buf == NULL || new_n < buf->n) {
 		return EINVAL;
 	}
@@ -65,8 +61,7 @@ int dbuf_grow_to(struct dbuf *buf, size_t new_n)
 
 	return 0;
 }
-void TestDbuf_grow_to(CuTest *tc)
-{
+void TestDbuf_grow_to(CuTest *tc) {
 	enum {
 		A_PRIME = 13,
 		A_LARGER_PRIME = 127,
@@ -88,8 +83,7 @@ void TestDbuf_grow_to(CuTest *tc)
 }
 
 
-int dbuf_grow(struct dbuf *buf)
-{
+int dbuf_grow(struct dbuf *buf) {
 	if (buf == NULL) {
 		return EINVAL;
 	}
@@ -106,8 +100,7 @@ int dbuf_grow(struct dbuf *buf)
 	}
 	return dbuf_grow_to(buf, new_n);
 }
-void TestDbuf_grow(CuTest *tc)
-{
+void TestDbuf_grow(CuTest *tc) {
 	struct dbuf buf = DBUF_STATIC_INIT(TEST_NINITIAL);
 
 	CuAssertIntEquals(tc, 0, dbuf_grow(&buf));
@@ -120,8 +113,7 @@ void TestDbuf_grow(CuTest *tc)
 
 	dbuf_destroy(&buf);
 }
-void TestDbuf_growNinitialIsZero(CuTest *tc)
-{
+void TestDbuf_growNinitialIsZero(CuTest *tc) {
 	struct dbuf buf = DBUF_STATIC_INIT(0);
 
 	CuAssertIntEquals(tc, 0, dbuf_grow(&buf));
@@ -132,8 +124,7 @@ void TestDbuf_growNinitialIsZero(CuTest *tc)
 }
 
 
-ssize_t dbuf_push(struct dbuf *buf, const void *s, size_t n)
-{
+ssize_t dbuf_push(struct dbuf *buf, const void *s, size_t n) {
 	if (buf == NULL || s == NULL) {
 		return -EINVAL;
 	}
@@ -157,8 +148,7 @@ ssize_t dbuf_push(struct dbuf *buf, const void *s, size_t n)
 
 	return offset;
 }
-void Testdbuf_push(CuTest *tc)
-{
+void Testdbuf_push(CuTest *tc) {
 #define A_STRING "0123456789" // its size should be <TEST_NINITIAL
 #define ANOTHER_STRING "abcdefghij" // the size of both string should be >TEST_NINITIAL
 	struct dbuf buf = DBUF_STATIC_INIT(TEST_NINITIAL);
@@ -181,8 +171,7 @@ void Testdbuf_push(CuTest *tc)
 
 	dbuf_destroy(&buf);
 }
-void Testdbuf_pushWithGrowTo(CuTest *tc)
-{
+void Testdbuf_pushWithGrowTo(CuTest *tc) {
 	struct dbuf buf = DBUF_STATIC_INIT(13); // some prime, assuming the OS maximum allocatable buffer is some power of 2, and we want to avoid it by having a maximum allocatable byte of buf including a prime factor
 
 	size_t n_before_append;
@@ -205,8 +194,7 @@ void Testdbuf_pushWithGrowTo(CuTest *tc)
 }
 
 
-int dbuf_pop(struct dbuf *buf, void *s, size_t n)
-{
+int dbuf_pop(struct dbuf *buf, void *s, size_t n) {
 	if (buf == NULL || s == NULL) {
 		return EINVAL;
 	}
@@ -223,8 +211,7 @@ int dbuf_pop(struct dbuf *buf, void *s, size_t n)
 
 	return 0;
 }
-void TestDbuf_pop(CuTest *tc)
-{
+void TestDbuf_pop(CuTest *tc) {
 	struct dbuf buf = DBUF_STATIC_INIT(TEST_NINITIAL);
 
 	static char buffer[TEST_NINITIAL];

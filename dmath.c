@@ -9,8 +9,7 @@
 #include <string.h>
 
 
-unsigned long fibonacci(int n)
-{
+unsigned long fibonacci(int n) {
 	if (n < 0) {
 		return -EDOM;
 	} else if (n > 92) {
@@ -41,8 +40,7 @@ unsigned long fibonacci(int n)
 
 	return x_n;
 }
-void TestFibonacci(CuTest *tc)
-{
+void TestFibonacci(CuTest *tc) {
 	enum {
 		NFIBONACCI = 94,
 	};
@@ -69,8 +67,7 @@ void TestFibonacci(CuTest *tc)
 }
 
 
-long gcd(long a, long b)
-{
+long gcd(long a, long b) {
 	if (a == 0 || b == 0) {
 		return -EDOM;
 	}
@@ -90,8 +87,7 @@ long gcd(long a, long b)
 }
 
 
-long lcm(int a, int b)
-{
+long lcm(int a, int b) {
 	if (a == 0 || b == 0) {
 		return -EDOM;
 	}
@@ -106,12 +102,10 @@ long lcm(int a, int b)
 }
 
 
-int arecoprime(long a, long b)
-{
+int arecoprime(long a, long b) {
 	return gcd(a, b) == 1;
 }
-void TestGcdLcmArecoprime(CuTest *tc)
-{
+void TestGcdLcmArecoprime(CuTest *tc) {
 	enum {
 		NELEM = 8
 	};
@@ -132,8 +126,7 @@ void TestGcdLcmArecoprime(CuTest *tc)
 }
 
 
-int arecoprime_pairwise(const long *a, int na)
-{
+int arecoprime_pairwise(const long *a, int na) {
 	const long *p, *eoa = a+na;
 	for( ; a<eoa; a++) {
 		for (p = a+1; p<eoa; p++) {
@@ -175,8 +168,7 @@ long extended_gcd(long a, long b, long *s, long *t) {
 
 	return b;
 }
-void TestExtended_gcd(CuTest *tc)
-{
+void TestExtended_gcd(CuTest *tc) {
 	enum {
 		NEGCD = 6,
 	};
@@ -197,8 +189,7 @@ void TestExtended_gcd(CuTest *tc)
 }
 
 
-int chinese_remainder(const long *a, const long *m, int neq)
-{
+int chinese_remainder(const long *a, const long *m, int neq) {
 	if (a == NULL || m == NULL || neq < 1) {
 		return -EINVAL;
 	}
@@ -253,8 +244,7 @@ error:
 	free(y);
 	return res;
 }
-void TestChinese_remainder(CuTest *tc)
-{
+void TestChinese_remainder(CuTest *tc) {
 	enum {
 		NWITHOUT_COPRIME = 4,
 		NWITH_COPRIME = 3,
@@ -274,8 +264,7 @@ void TestChinese_remainder(CuTest *tc)
 }
 
 
-int isprime(long unsigned int n)
-{
+int isprime(long unsigned int n) {
 	if (n < 2) {
 		return 0;
 	}
@@ -291,8 +280,7 @@ int isprime(long unsigned int n)
 }
 
 
-int isprime_cached(unsigned int n)
-{
+int isprime_cached(unsigned int n) {
 	enum {
 		MAXN = 4294967295, // 2^32-1, if some computer have UINT_MAX > 2^32-1, do not calculate primes above this, because there are approximately 2*10^8 primes  up to sqrt(2^64)==2^32
 #if (UINT_MAX == 65535)
@@ -335,8 +323,7 @@ int isprime_cached(unsigned int n)
 
 	return 1;
 }
-void TestIsprime(CuTest *tc)
-{
+void TestIsprime(CuTest *tc) {
 	enum {
 		NA = 5,
 	};
@@ -358,8 +345,7 @@ void TestIsprime(CuTest *tc)
 }
 
 
-int is_power_of_2(unsigned long n)
-{
+int is_power_of_2(unsigned long n) {
 	if (n == 0) {
 		return 0; // undefined
 	}
@@ -372,8 +358,7 @@ int is_power_of_2(unsigned long n)
 }
 
 
-int is_power_of(int base, unsigned long n)
-{
+int is_power_of(int base, unsigned long n) {
 	if (base < 2) {
 		return 0; // undefined
 	}
@@ -397,8 +382,7 @@ int is_power_of(int base, unsigned long n)
 
 	return 0;
 }
-void TestIs_power_of(CuTest *tc)
-{
+void TestIs_power_of(CuTest *tc) {
 	enum {
 		NBASE = 3,
 		NELEM = 3,
@@ -450,8 +434,7 @@ void TestIs_power_of(CuTest *tc)
 }
 
 
-int dmath_ilog2(unsigned long n)
-{
+int dmath_ilog2(unsigned long n) {
 	if (n == 0) {
 		return -EDOM;
 	}
@@ -465,8 +448,7 @@ int dmath_ilog2(unsigned long n)
 }
 
 
-int dmath_ilogb(int base, long unsigned int n)
-{
+int dmath_ilogb(int base, long unsigned int n) {
 	if (base < 2) {
 		return -EDOM;
 	}
@@ -484,8 +466,7 @@ int dmath_ilogb(int base, long unsigned int n)
 
 
 const char *basestring_alphabet = "0123456789abcdefghijklmnopqrstuvwxyz";
-int basestring_char_to_int(char c)
-{
+int basestring_char_to_int(char c) {
 	if (isdigit(c)) {
 		return c - '0';
 	} else if (islower(c)) {
@@ -494,8 +475,7 @@ int basestring_char_to_int(char c)
 		return -ERANGE;
 	}
 }
-void TestBasestring_char_to_int(CuTest *tc)
-{
+void TestBasestring_char_to_int(CuTest *tc) {
 	CuAssertIntEquals(tc, basestring_char_to_int('0'-1), -ERANGE);
 	CuAssertIntEquals(tc, basestring_char_to_int('z'+1), -ERANGE);
 
@@ -506,8 +486,7 @@ void TestBasestring_char_to_int(CuTest *tc)
 }
 
 
-int basestring_from_long(char *basestring, int base, long unsigned int n)
-{
+int basestring_from_long(char *basestring, int base, long unsigned int n) {
 	if (base < 2 || base > 36) {
 		return -ERANGE;
 	}
@@ -526,8 +505,7 @@ int basestring_from_long(char *basestring, int base, long unsigned int n)
 	basestring[max+1] = '\0';
 	return max+1; // strlen(basestring)
 }
-void TestLogBasestring_from_log(CuTest *tc)
-{
+void TestLogBasestring_from_log(CuTest *tc) {
 	enum {
 		NELEM = 6,
 		LONGEST_BASESTRING = 64+1,
@@ -583,8 +561,7 @@ void TestLogBasestring_from_log(CuTest *tc)
 }
 
 
-unsigned int modular_exponentiation(unsigned int b, unsigned int e, unsigned int m)
-{
+unsigned int modular_exponentiation(unsigned int b, unsigned int e, unsigned int m) {
 	if (m < 1) {
 		return -EDOM;
 	}
@@ -602,8 +579,7 @@ unsigned int modular_exponentiation(unsigned int b, unsigned int e, unsigned int
 
 	return result % m;
 }
-void TestModular_exponentiation(CuTest *tc)
-{
+void TestModular_exponentiation(CuTest *tc) {
 	enum {
 		NELEM = 3,
 	};

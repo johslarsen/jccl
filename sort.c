@@ -5,15 +5,13 @@
 
 #define ODD(n) (n & 1)
 
-void swap(int *a, int *b)
-{
+void swap(int *a, int *b) {
 	int tmp = *a;
 	*a = *b;
 	*b = tmp;
 }
 
-void sort_odd_even(int *a, int na)
-{
+void sort_odd_even(int *a, int na) {
 	int i, *first_even;
 
 	// locate the first even number
@@ -31,8 +29,7 @@ void sort_odd_even(int *a, int na)
 	}
 }
 
-static int issorted_odd_even(int *a, int na)
-{
+static int issorted_odd_even(int *a, int na) {
 	int odd = 1, *p = a;
 	int *eoa = p+na;
 	for (; p < eoa; p++) {
@@ -48,8 +45,7 @@ static int issorted_odd_even(int *a, int na)
 	return 1;
 }
 
-void TestSort_odd_even(CuTest *tc)
-{
+void TestSort_odd_even(CuTest *tc) {
 	enum {
 		NINT = 100,
 	};

@@ -16,8 +16,7 @@ struct Table {
 };
 
 
-Table *table_init(unsigned int size)
-{
+Table *table_init(unsigned int size) {
 	if (size == 0) {
 		return NULL;
 	}
@@ -40,8 +39,7 @@ Table *table_init(unsigned int size)
 }
 
 
-int table_free(Table *table)
-{
+int table_free(Table *table) {
 	if (table == NULL) {
 		return EINVAL;
 	}
@@ -66,8 +64,7 @@ int table_free(Table *table)
 
 
 /* creates the hash for the key */
-static unsigned int hash(const Table *table, const char *key)
-{
+static unsigned int hash(const Table *table, const char *key) {
 	enum {
 		Multiplier = 37, // empirically good value, see page 56 of Brian W. Kernighan, Rob Pike. "The pracitice of programming"
 	};
@@ -84,8 +81,7 @@ static unsigned int hash(const Table *table, const char *key)
 
 
 /* allocates memory for a table node and sets its fields */
-static Table_node *table_create_node(const char *key, void *value)
-{
+static Table_node *table_create_node(const char *key, void *value) {
 	Table_node *np = malloc(sizeof(*np)); // node pointer
 	if (np == NULL) {
 		return NULL;
@@ -99,8 +95,7 @@ static Table_node *table_create_node(const char *key, void *value)
 }
 
 
-int table_add(Table *table, const char *key, void *value)
-{
+int table_add(Table *table, const char *key, void *value) {
 	if (table == NULL) {
 		return EINVAL;
 	}
@@ -118,8 +113,7 @@ int table_add(Table *table, const char *key, void *value)
 }
 
 
-int table_remove(Table *table, const char *key)
-{
+int table_remove(Table *table, const char *key) {
 	if (table == NULL) {
 		return EINVAL;
 	}
@@ -160,8 +154,7 @@ int table_remove(Table *table, const char *key)
 }
 
 
-void *table_lookup(Table *table, const char *key)
-{
+void *table_lookup(Table *table, const char *key) {
 	if (table == NULL) {
 		return NULL;
 	}
