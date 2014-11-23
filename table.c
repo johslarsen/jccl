@@ -45,11 +45,9 @@ int table_free(Table *table) {
 	}
 
 	if (table->entries != NULL) {
-		int i;
-		for (i = 0; i < table->size; i++) {
+		for (int i = 0; i < table->size; i++) {
 			// remove each node in the i-th hash chain
-			Table_node *nnp, *np; // next - / node pointer
-			for (np = table->entries[i]; np != NULL; np = nnp) {
+			for (Table_node *nnp, *np = table->entries[i]; np != NULL; np = nnp) { // next - / node pointer
 				nnp = np->next;
 				free(np->key);
 				free(np);
@@ -69,10 +67,8 @@ static unsigned int hash(const Table *table, const char *key) {
 		Multiplier = 37, // empirically good value, see page 56 of Brian W. Kernighan, Rob Pike. "The pracitice of programming"
 	};
 
-	unsigned int hash;
-	const unsigned char *c;
-
-	for (hash = 0, c = (const unsigned char *)key; *c != '\0'; c++) {
+	unsigned int hash = 0;
+	for (const unsigned char *c = (const unsigned char *)key; *c != '\0'; c++) {
 		hash = Multiplier * hash + *c;
 	}
 
@@ -129,10 +125,9 @@ int table_remove(Table *table, const char *key) {
 		np = table->entries[h];
 		table->entries[h] = np->next;
 	} else {
-		Table_node *pnp; // previous node pointer
-
 		// traverse hash chain to find key
-		for (pnp = table->entries[h]; pnp->next != NULL; pnp=pnp->next) {
+		Table_node *pnp;
+		for (pnp = table->entries[h]; pnp->next != NULL; pnp=pnp->next) { // previous node pointer
 			if (strcmp(pnp->next->key, key) == 0) {
 				break;
 			}
@@ -160,8 +155,7 @@ void *table_lookup(Table *table, const char *key) {
 	}
 
 	unsigned int h = hash(table, key);
-	Table_node *np; // node pointer
-	for (np = table->entries[h]; np != NULL; np = np->next) {
+	for (Table_node *np = table->entries[h]; np != NULL; np = np->next) {
 		if (strcmp(np->key, key) == 0) {
 			return np->value;
 		}

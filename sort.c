@@ -51,8 +51,7 @@ void TestSort_odd_even(CuTest *tc) {
 	};
 
 	int ints[NINT];
-	int i;
-	for (i = 0; i < NINT; i++) {
+	for (int i = 0; i < NINT; i++) {
 		ints[i] = rand();
 	}
 

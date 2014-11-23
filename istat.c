@@ -12,8 +12,7 @@ static int double_compar(const void *a, const void *b) {
 }
 void TestIstatMinMax(CuTest *tc) {
 	double min = DBL_MAX, max = DBL_MIN;
-	size_t i;
-	for (i = 0; i < npopulation; i++) {
+	for (size_t i = 0; i < npopulation; i++) {
 		min = istat_min(min, population[i]);
 		max = istat_max(max, population[i]);
 	}
@@ -28,15 +27,14 @@ void TestIstat(CuTest *tc) {
 	struct istat istat = ISTAT_STATIC_INIT();
 
 	double sum = 0.0;
-	size_t i;
-	for (i = 0; i < npopulation; i++) {
+	for (size_t i = 0; i < npopulation; i++) {
 		istat_add(&istat, population[i]);
 		sum += population[i];
 	}
 
 	double mean = sum / npopulation;
 	double sum_square_delta_mean = 0.0;
-	for (i = 0; i < npopulation; i++) {
+	for (size_t i = 0; i < npopulation; i++) {
 		sum_square_delta_mean += pow(population[i]-mean, 2);
 	}
 

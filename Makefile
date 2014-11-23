@@ -1,5 +1,5 @@
 CC             := gcc
-CFLAGS         := -pipe -g -p -Wall
+CFLAGS         := -pipe -g -p -Wall --std=gnu11
 
 RM             := rm -f
 

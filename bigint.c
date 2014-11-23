@@ -52,8 +52,7 @@ static struct bigint *bigint_init(int nchunk) {
 	return n;
 }
 void TestBigint_init(CuTest *tc) {
-	int i;
-	for (i = 1; i <= 10; i++) {
+	for (int i = 1; i <= 10; i++) {
 		struct bigint *n = bigint_init(i);
 		CuAssertPtrNotNull(tc, n);
 		CuAssertIntEquals(tc, i, n->nchunk);
@@ -287,8 +286,7 @@ struct bigint *bigint_from_msb_first_hexstring(const char *s, size_t ns) {
 	}
 
 	unsigned long nibble;
-	int i;
-	for (i = 0; i < ns; i++) {
+	for (int i = 0; i < ns; i++) {
 		char *hexchar = strchr(bigint_hex_charset, s[ns-1-i]);
 		if (hexchar == NULL) {
 			goto error;
@@ -316,8 +314,7 @@ int bigint_nnibble(const struct bigint *n) {
 	return n == NULL ? -EINVAL : n->nchunk*NNIBBLE_IN_LONG;
 }
 void TestBigint_nnibble(CuTest *tc) {
-	int i;
-	for (i = 1; i < 10; i++) {
+	for (int i = 1; i < 10; i++) {
 		struct bigint *n = bigint_init(i);
 		CuAssertPtrNotNull(tc, n);
 
@@ -334,13 +331,11 @@ int bigint_to_msb_first_hexstring(const struct bigint *n, char *s) {
 		return -EINVAL;
 	}
 
-	int i;
 	char *start_of_chunk = s;
-	for (i = n->nchunk-1; i >= 0; i--) {
+	for (int i = n->nchunk-1; i >= 0; i--) {
 		unsigned long chunk = n->chunks[i];
 
-		char *p;
-		for (p = start_of_chunk+NNIBBLE_IN_LONG-1; p >= start_of_chunk; p--) {
+		for (char *p = start_of_chunk+NNIBBLE_IN_LONG-1; p >= start_of_chunk; p--) {
 			*p = bigint_hex_charset[chunk & NIBBLE_MASK];
 			chunk >>= NIBBLE_BIT;
 		}
@@ -369,8 +364,7 @@ void TestBigintCreationAndHextring(CuTest *tc) {
 
 	char res[RES_LEN];
 
-	int i;
-	for (i = 0; i < 3; i++) {
+	for (int i = 0; i < 3; i++) {
 		CuAssertIntEquals(tc, n_hexstring_len, bigint_to_msb_first_hexstring(bns[i], res));
 		CuAssertStrEquals(tc, n_hexstring, res);
 		bigint_destroy(bns[i]);
@@ -383,7 +377,7 @@ void TestBigintCreationAndHextring(CuTest *tc) {
 	CuAssertPtrNotNull(tc, (bns[0] = bigint_from_msb_first_hexstring(multi_long_hexstring, 17)));
 	CuAssertPtrNotNull(tc, (bns[1] = bigint_from_msb_first_hexstring(multi_long_hexstring, 0)));
 
-	for (i = 0; i < 2; i++) {
+	for (int i = 0; i < 2; i++) {
 		CuAssertIntEquals(tc, multi_long_hexstring_res_len, bigint_to_msb_first_hexstring(bns[i], res));
 		CuAssertStrEquals(tc, multi_long_hexstring_res, res);
 		bigint_destroy(bns[i]);
@@ -410,8 +404,7 @@ int bigint_compare(const struct bigint *a, const struct bigint *b) {
 		return a_msb == 1 ? -abs_res : abs_res;
 	}
 
-	int i;
-	for (i = a->nchunk-1; i >= 0; i--) {
+	for (int i = a->nchunk-1; i >= 0; i--) {
 		if (a->chunks[i] != b->chunks[i]) {
 			return a->chunks[i] > b->chunks[i] ? 1 : -1;
 		}
@@ -475,8 +468,7 @@ struct bigint *bigint_not(const struct bigint *n) {
 
 	struct bigint *res = bigint_init(n->nchunk);
 
-	int i;
-	for (i = 0; i < n->nchunk; i++) {
+	for (int i = 0; i < n->nchunk; i++) {
 		res->chunks[i] = ~n->chunks[i];
 	}
 
@@ -497,8 +489,7 @@ struct bigint *bigint_and(const struct bigint *a, const struct bigint *b) {
 		return NULL;
 	}
 
-	int i;
-	for (i = 0; i < maxchunks; i++) {
+	for (int i = 0; i < maxchunks; i++) {
 		res->chunks[i] = bigint_index_with_padding(a, i) & bigint_index_with_padding(b, i);
 	}
 
@@ -519,8 +510,7 @@ struct bigint *bigint_or(const struct bigint *a, const struct bigint *b) {
 		return NULL;
 	}
 
-	int i;
-	for (i = 0; i < maxchunks; i++) {
+	for (int i = 0; i < maxchunks; i++) {
 		res->chunks[i] = bigint_index_with_padding(a, i) | bigint_index_with_padding(b, i);
 	}
 
@@ -541,8 +531,7 @@ struct bigint *bigint_xor(const struct bigint *a, const struct bigint *b) {
 		return NULL;
 	}
 
-	int i;
-	for (i = 0; i < maxchunks; i++) {
+	for (int i = 0; i < maxchunks; i++) {
 		res->chunks[i] = bigint_index_with_padding(a, i) ^ bigint_index_with_padding(b, i);
 	}
 
@@ -585,8 +574,7 @@ void TestBigintBitwiseOperators(CuTest *tc) {
 	bns[A_OR_B] = bigint_or(bns[A], bns[B]);
 	bns[A_XOR_B] = bigint_xor(bns[A], bns[B]);
 
-	int i;
-	for (i = 0; i < NHEXSTRING; i++) {
+	for (int i = 0; i < NHEXSTRING; i++) {
 		char res[RES_LEN];
 		CuAssertIntEquals(tc, strlen(hexstrings[i]), bigint_to_msb_first_hexstring(bns[i], res));
 		CuAssertStrEquals(tc, hexstrings[i], res);
@@ -621,8 +609,7 @@ struct bigint *bigint_shift_left(const struct bigint *a, const struct bigint *b)
 	}
 
 	unsigned long carry = 0;
-	int i;
-	for (i = 0; i < a->nchunk; i++) {
+	for (int i = 0; i < a->nchunk; i++) {
 		res->chunks[npre_chunks + i] = (a->chunks[i]<<non_chunk_shift) | carry;
 		carry = a->chunks[i] >> (LONG_BIT-non_chunk_shift);
 	}
@@ -659,9 +646,8 @@ struct bigint *bigint_shift_right(const struct bigint *a, const struct bigint *b
 	if (shift_more_than_a) {
 		res->chunks[0] = a->pad_chunk;
 	} else {
-		int i;
 		unsigned long carry = a->pad_chunk << (LONG_BIT-non_chunk_shift);
-		for (i = a->nchunk-1; i >= removed_chunks; i--) {
+		for (int i = a->nchunk-1; i >= removed_chunks; i--) {
 			res->chunks[i-removed_chunks] = (a->chunks[i]>>non_chunk_shift) | carry;
 			carry = a->chunks[i]<<(LONG_BIT-non_chunk_shift);
 		}
@@ -712,8 +698,7 @@ void TestBigintBitshift(CuTest *tc) {
 	bns[C] = bigint_from_msb_first_hexstring(hexstrings[C], 0);
 	bns[C_RIGHT_SHIFT_B] = bigint_shift_right(bns[C], bns[B]);
 
-	int i;
-	for (i = 0; i < NHEXSTRING; i++) {
+	for (int i = 0; i < NHEXSTRING; i++) {
 		char res[RES_LEN];
 		CuAssertIntEquals(tc, strlen(hexstrings[i]), bigint_to_msb_first_hexstring(bns[i], res));
 		CuAssertStrEquals(tc, hexstrings[i], res);
@@ -768,8 +753,7 @@ struct bigint *bigint_add(const struct bigint *a, const struct bigint *b) {
 		return NULL;
 	}
 
-	int i, carry = 0;
-	for (i = 0; i < maxchunk; i++) {
+	for (int i = 0, carry = 0; i < maxchunk; i++) {
 		unsigned long sum_of_all_but_msbs = (bigint_index_with_padding(a, i) & ~LONG_MSB_MASK) + (bigint_index_with_padding(b, i) & ~LONG_MSB_MASK) + carry;
 		unsigned long sum_of_msbs = bigint_msb(a, i) + bigint_msb(b, i) + (sum_of_all_but_msbs>>LONG_MSB);
 
@@ -780,7 +764,6 @@ struct bigint *bigint_add(const struct bigint *a, const struct bigint *b) {
 	bigint_identify_pad_chunk_and_trim(res);
 	return res;
 }
-
 
 struct bigint *bigint_subtract(const struct bigint *a, const struct bigint *b) {
 	if (a == NULL || b == NULL) {
@@ -842,8 +825,7 @@ void TestBigintArithmeticOperators(CuTest *tc) {
 	bns[A_ADD_B] = bigint_add(bns[A], bns[B]);
 	bns[A_MINUS_B] = bigint_subtract(bns[A], bns[B]);
 
-	int i;
-	for (i = 0; i < NHEXSTRING; i++) {
+	for (int i = 0; i < NHEXSTRING; i++) {
 		char res[RES_LEN];
 		CuAssertIntEquals(tc, strlen(hexstrings[i]), bigint_to_msb_first_hexstring(bns[i], res));
 		CuAssertStrEquals(tc, hexstrings[i], res);

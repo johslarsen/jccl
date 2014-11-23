@@ -10,8 +10,7 @@
 void vjlogprintf(const struct jlogger *logger, enum jlog_tag tag, const char *prefix, const char *filename, size_t linenumber, const char *fmt, ...) {
 	va_list original_args;
 	va_start(original_args, fmt);
-	int i;
-	for (i = 0; i < logger->nwriter; i++) {
+	for (int i = 0; i < logger->nwriter; i++) {
 		const struct jlogger_writer *writer = &logger->writers[i];
 		if (writer->fp == NULL || (writer->mask & tag) == 0) {
 			continue;

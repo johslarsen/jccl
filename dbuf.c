@@ -33,8 +33,7 @@ void TestDbufInitAndDestroy(CuTest *tc) {
 
 	dbuf_init(&rbuf, TEST_NINITIAL);
 
-	int i;
-	for (i = 0; i < sizeof(sbuf); i++) {
+	for (int i = 0; i < sizeof(sbuf); i++) {
 		CuAssertIntEquals(tc, *(((char *)&sbuf)+i), *(((char *)&rbuf)+i));
 	}
 

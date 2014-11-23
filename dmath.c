@@ -31,8 +31,7 @@ unsigned long fibonacci(int n) {
 	unsigned long x_n1 = x_1;
 	unsigned long x_n2 = x_0;
 
-	int i;
-	for (i = 1; i < n; i++) {
+	for (int i = 1; i < n; i++) {
 		x_n = x_n1 + x_n2; // the recursive equation
 		x_n2 = x_n1;
 		x_n1 = x_n;
@@ -60,8 +59,7 @@ void TestFibonacci(CuTest *tc) {
 		2880067194370816120, 4660046610375530309, 7540113804746346429, -ERANGE
 	};
 
-	int i;
-	for (i = 0; i < NFIBONACCI; i++) {
+	for (int i = 0; i < NFIBONACCI; i++) {
 		CuAssertIntEquals(tc, fibonacci(i), fibonacci_answer[i]);
 	}
 }
@@ -117,8 +115,7 @@ void TestGcdLcmArecoprime(CuTest *tc) {
 	const int cp_ans[NELEM] =  {0,     0,        0, 0,        0,        0,        1,   1};
 
 
-	int i;
-	for (i = 0; i < NELEM; i++) {
+	for (int i = 0; i < NELEM; i++) {
 		CuAssertIntEquals(tc, gcd(a[i], b[i]), gcd_ans[i]);
 		CuAssertIntEquals(tc, lcm(a[i], b[i]), lcm_ans[i]);
 		CuAssertIntEquals(tc, arecoprime(a[i], b[i]), cp_ans[i]);
@@ -127,9 +124,9 @@ void TestGcdLcmArecoprime(CuTest *tc) {
 
 
 int arecoprime_pairwise(const long *a, int na) {
-	const long *p, *eoa = a+na;
+	const long *eoa = a+na;
 	for( ; a<eoa; a++) {
-		for (p = a+1; p<eoa; p++) {
+		for (const long *p = a+1; p<eoa; p++) {
 			if (*a == *p || arecoprime(*a, *p) == 0) {
 				return 0;
 			}
@@ -179,8 +176,7 @@ void TestExtended_gcd(CuTest *tc) {
 	const long t_ans[NEGCD] =   {0,        0,     -1969,   -3,     -3,     3};
 	const long gcd_ans[NEGCD] = {-EDOM,    -EDOM, 1,       1056,   1056,   1056};
 
-	long s, t, i;
-	for (i = 0; i < NEGCD; i++) {
+	for (long s,t, i = 0; i < NEGCD; i++) {
 		CuAssertIntEquals(tc, extended_gcd(a[i], b[i], &s, &t), gcd_ans[i]);
 		CuAssertIntEquals(tc, s, s_ans[i]);
 		CuAssertIntEquals(tc, t, t_ans[i]);
@@ -194,9 +190,8 @@ int chinese_remainder(const long *a, const long *m, int neq) {
 		return -EINVAL;
 	}
 
-	int i;
 	// check that every integer in arguments a and m are non-zero
-	for (i = 0; i < neq; i++) {
+	for (int i = 0; i < neq; i++) {
 		if (a[i] == 0 || m[i] == 0) {
 			return -EDOM;
 		}
@@ -215,15 +210,15 @@ int chinese_remainder(const long *a, const long *m, int neq) {
 		goto error;
 	}
 
-	for (i = 0; i < neq; i++) {
+	for (int i = 0; i < neq; i++) {
 		sm *= m[i];
 	}
 
-	for (i = 0; i < neq; i++) {
+	for (int i = 0; i < neq; i++) {
 		M[i] = sm / m[i];
 	}
 
-	for (i = 0; i < neq; i++) {
+	for (int i = 0; i < neq; i++) {
 		long tmp;
 		if (extended_gcd(M[i], m[i], &y[i], &tmp) != 1) {
 			res = -EDOM;
@@ -231,7 +226,7 @@ int chinese_remainder(const long *a, const long *m, int neq) {
 		}
 	}
 
-	for (i = 0; i < neq; i++) {
+	for (int i = 0; i < neq; i++) {
 		res += M[i]*a[i]*y[i];
 	}
 	res %= sm;
@@ -269,8 +264,8 @@ int isprime(long unsigned int n) {
 		return 0;
 	}
 
-	long unsigned int i, sqrtn = sqrt(n);
-	for (i = 2; i <= sqrtn; i++) {
+	long unsigned int sqrtn = sqrt(n);
+	for (long unsigned int i = 2; i <= sqrtn; i++) {
 		if (n % i == 0) {
 			return 0;
 		}
@@ -302,15 +297,13 @@ int isprime_cached(unsigned int n) {
 	}
 
 	unsigned int sqrtn = sqrt(n)+1;
-
-	unsigned int i;
-	for (i = 0; i < nprime && primes[i] <= sqrtn; i++) {
+	for (unsigned int i = 0; i < nprime && primes[i] <= sqrtn; i++) {
 		if (n % primes[i] == 0) {
 			return n == primes[i] ? 1 : 0;
 		}
 	}
 
-	for (i = primes[nprime-1]; i <= sqrtn; i++) {
+	for (unsigned int i = primes[nprime-1]; i <= sqrtn; i++) {
 		if (isprime_cached(i) && (n % i) == 0) {
 			return 0;
 		}
@@ -337,8 +330,7 @@ void TestIsprime(CuTest *tc) {
 	};
 	int ans[] = 		{1,	1,	0,	0,	1};
 
-	int i;
-	for (i = 0; i < NA; i++) {
+	for (int i = 0; i < NA; i++) {
 		CuAssertIntEquals(tc, ans[i], isprime(a[i]));
 		CuAssertIntEquals(tc, ans[i], isprime_cached(a[i]));
 	}
@@ -397,8 +389,7 @@ void TestIs_power_of(CuTest *tc) {
 	CuAssertIntEquals(tc, 0, is_power_of(-1, 1337));
 
 
-	int i;
-	for (i = 1; i > 0; i<<=1) { // escapes on overflow
+	for (int i = 1; i > 0; i<<=1) { // escapes on overflow
 		CuAssertIntEquals(tc, 1, is_power_of_2(i));
 		CuAssertIntEquals(tc, 1, is_power_of(2, i));
 	}
@@ -415,14 +406,12 @@ void TestIs_power_of(CuTest *tc) {
 		{7,49,343},
 	};
 
-	for(i = 0; i < NBASE; i++) {
+	for(int i = 0; i < NBASE; i++) {
 
 		unsigned int *p = n[base[i]];
 		unsigned int *eon = p+NELEM;
 		for ( ; p < eon; p++) {
-
-			int j;
-			for (j = 0; j < NBASE; j++) {
+			for (int j = 0; j < NBASE; j++) {
 				CuAssertIntEquals(tc, i == j, is_power_of(base[j], *p));
 			}
 
@@ -479,8 +468,8 @@ void TestBasestring_char_to_int(CuTest *tc) {
 	CuAssertIntEquals(tc, basestring_char_to_int('0'-1), -ERANGE);
 	CuAssertIntEquals(tc, basestring_char_to_int('z'+1), -ERANGE);
 
-	int i, basestring_alphabet_len = strlen(basestring_alphabet);
-	for (i = 0; i < basestring_alphabet_len; i++) {
+	int basestring_alphabet_len = strlen(basestring_alphabet);
+	for (int i = 0; i < basestring_alphabet_len; i++) {
 		CuAssertIntEquals(tc, basestring_char_to_int(basestring_alphabet[i]), i);
 	}
 }
@@ -497,9 +486,8 @@ int basestring_from_long(char *basestring, int base, long unsigned int n) {
 		return 1; // strlen(basestring)
 	}
 
-	int i, max;
-	max = dmath_ilogb(base, n);
-	for (i = max; i >= 0; n /= base) {
+	int max = dmath_ilogb(base, n);
+	for (int i = max; i >= 0; n /= base) {
 		basestring[i--] = basestring_alphabet[n % base];
 	}
 	basestring[max+1] = '\0';
@@ -541,8 +529,7 @@ void TestLogBasestring_from_log(CuTest *tc) {
 	CuAssertIntEquals(tc, basestring_from_long(bs, 1, 1337), -ERANGE);
 	CuAssertIntEquals(tc, basestring_from_long(bs, 37, 1337), -ERANGE);
 
-	int i;
-	for (i = 0; i < NELEM; i++) {
+	for (int i = 0; i < NELEM; i++) {
 		CuAssertIntEquals(tc, dmath_ilog2_ans[i], dmath_ilog2(n[i]));
 		CuAssertIntEquals(tc, dmath_ilog2_ans[i], dmath_ilogb(2, n[i]));
 		CuAssertIntEquals(tc, dmath_ilogb_ans[i], dmath_ilogb(base[i], n[i]));
@@ -553,8 +540,7 @@ void TestLogBasestring_from_log(CuTest *tc) {
 		CuAssertIntEquals(tc, strlen(base_b_string[i]), basestring_from_long(bs, base[i], n[i]));
 		CuAssertStrEquals(tc, base_b_string[i], bs);
 
-		char *bsp;
-		for (bsp = bs; *bsp != '\0'; bsp++) {
+		for (char *bsp = bs; *bsp != '\0'; bsp++) {
 			CuAssertIntEquals(tc, basestring_alphabet[basestring_char_to_int(*bsp)], *bsp);
 		}
 	}
@@ -589,8 +575,7 @@ void TestModular_exponentiation(CuTest *tc) {
 	int m[NELEM] =	{645,	645,99};
 	int ans[NELEM] =	{36,	436,27};
 
-	int i;
-	for (i = 0; i < NELEM; i++) {
+	for (int i = 0; i < NELEM; i++) {
 		CuAssertIntEquals(tc, modular_exponentiation(b[i], e[i], m[i]), ans[i]);
 	}
 }

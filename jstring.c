@@ -29,8 +29,7 @@ void TestStrnchr(CuTest *tc) {
 	char s[] = LOWER_CASE_US_ALPHABET;
 
 	CuAssertPtrEquals(tc, NULL, strnchr(s, sizeof(s), -1));
-	int i;
-	for (i = 0; i < sizeof(s); i++) {
+	for (int i = 0; i < sizeof(s); i++) {
 		int j;
 		for (j = 0; j < i; j++) {
 			CuAssertPtrEquals(tc, s+j, strnchr(s, i, s[j]));
@@ -64,8 +63,7 @@ void TestStrnstr(CuTest *tc) {
 	CuAssertStrEquals(tc, s, strnstr(s, "", 0));
 
 	CuAssertStrEquals(tc, NULL, strnstr(s, ZERO_THROUGH_NINE, sizeof(s)));
-	int i;
-	for (i = 0; i < sizeof(s)-1; i++) {
+	for (int i = 0; i < sizeof(s)-1; i++) {
 		int j;
 		for (j = 0; j < i; j++) {
 			char str_with_this_char[2];

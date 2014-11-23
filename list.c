@@ -239,8 +239,7 @@ void TestListNonempty(CuTest *tc) {
 	struct list *list = list_init();
 	CuAssertPtrNotNull(tc, list);
 
-	int i;
-	for (i = 0; i < NELEMENT; i++) {
+	for (int i = 0; i < NELEMENT; i++) {
 		elements[i] = NELEMENT-i;
 
 		CuAssertIntEquals(tc, i, list_size(list));
@@ -251,31 +250,31 @@ void TestListNonempty(CuTest *tc) {
 	int somenumber;
 	CuAssertIntEquals(tc, EADDRNOTAVAIL, list_remove(list, &somenumber));
 
-	for (i = NELEMENT; i > 0; i--) {
+	for (int i = NELEMENT; i > 0; i--) {
 		CuAssertIntEquals(tc, i, list_size(list));
 		CuAssertIntEquals(tc, 0, list_remove(list, elements+(i-1)));
 		CuAssertIntEquals(tc, i-1, list_size(list));
 	}
 
-	for (i = 0; i < NELEMENT; i++) {
+	for (int i = 0; i < NELEMENT; i++) {
 		CuAssertIntEquals(tc, i ,list_size(list));
 		CuAssertIntEquals(tc, 0, list_append(list, elements+i));
 		CuAssertIntEquals(tc, i+1 ,list_size(list));
 	}
 
-	for (i = 0; i < NELEMENT>>1; i++) {
+	for (int i = 0; i < NELEMENT>>1; i++) {
 		CuAssertIntEquals(tc, NELEMENT-i, list_size(list));
 		CuAssertPtrEquals(tc, elements+i, list_shift(list));
 		CuAssertIntEquals(tc, NELEMENT-i-1, list_size(list));
 	}
 
-	for (i = NELEMENT>>1; i > 0; i--) {
+	for (int i = NELEMENT>>1; i > 0; i--) {
 		CuAssertIntEquals(tc, NELEMENT-i, list_size(list));
 		CuAssertIntEquals(tc, 0, list_prepend(list, elements+(i-1)));
 		CuAssertIntEquals(tc, NELEMENT-i+1, list_size(list));
 	}
 
-	for (i = NELEMENT; i > 0; i--) {
+	for (int i = NELEMENT; i > 0; i--) {
 		CuAssertIntEquals(tc, i, list_size(list));
 		CuAssertPtrEquals(tc, elements+(i-1), list_pop(list));
 		CuAssertIntEquals(tc, i-1, list_size(list));
@@ -401,20 +400,19 @@ void TestList_iteratorNonempty(CuTest *tc) {
 	struct list_iterator *li = list_iterator_init(list);
 	CuAssertPtrNotNull(tc, li);
 
-	int i;
-	for (i = 0; i < NELEMENT; i++) {
+	for (int i = 0; i < NELEMENT; i++) {
 		elements[i] = NELEMENT-i;
 		list_append(list, elements+i);
 	}
 
 	CuAssertIntEquals(tc, 0, list_iterator_reset(li));
 
-	for (i = 0; i < NELEMENT; i++) {
+	for (int i = 0; i < NELEMENT; i++) {
 		CuAssertPtrEquals(tc, elements+i, list_iterator_next(li));
 	}
 	CuAssertPtrEquals(tc, NULL, list_iterator_next(li));
 
-	for (i = NELEMENT-1; i >= 0; i--) {
+	for (int i = NELEMENT-1; i >= 0; i--) {
 		CuAssertPtrEquals(tc, elements+i, list_iterator_previous(li));
 	}
 	CuAssertPtrEquals(tc, NULL, list_iterator_previous(li));
