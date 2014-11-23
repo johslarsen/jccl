@@ -476,67 +476,38 @@ struct bigint *bigint_not(const struct bigint *n) {
 	return res;
 }
 
+#define BIGINT_BINOP(a, b, op) do { \
+		if ((a) == NULL || (b) == NULL) {\
+			return NULL;\
+		}\
+		\
+		int maxchunks = (a)->nchunk > (b)->nchunk ? (a)->nchunk : (b)->nchunk;\
+		\
+		struct bigint *res = bigint_init(maxchunks);\
+		if (res == NULL) {\
+			return NULL;\
+		}\
+		\
+		for (int i = 0; i < maxchunks; i++) {\
+			res->chunks[i] = bigint_index_with_padding((a), i) op bigint_index_with_padding((b), i);\
+		}\
+		\
+		bigint_identify_pad_chunk_and_trim(res);\
+		return res;\
+	} while(0)
 
 struct bigint *bigint_and(const struct bigint *a, const struct bigint *b) {
-	if (a == NULL || b == NULL) {
-		return NULL;
-	}
-
-	int maxchunks = a->nchunk > b->nchunk ? a->nchunk : b->nchunk;
-
-	struct bigint *res = bigint_init(maxchunks);
-	if (res == NULL) {
-		return NULL;
-	}
-
-	for (int i = 0; i < maxchunks; i++) {
-		res->chunks[i] = bigint_index_with_padding(a, i) & bigint_index_with_padding(b, i);
-	}
-
-	bigint_identify_pad_chunk_and_trim(res);
-	return res;
+	BIGINT_BINOP(a, b, &);
 }
 
 
 struct bigint *bigint_or(const struct bigint *a, const struct bigint *b) {
-	if (a == NULL || b == NULL) {
-		return NULL;
-	}
-
-	int maxchunks = a->nchunk > b->nchunk ? a->nchunk : b->nchunk;
-
-	struct bigint *res = bigint_init(maxchunks);
-	if (res == NULL) {
-		return NULL;
-	}
-
-	for (int i = 0; i < maxchunks; i++) {
-		res->chunks[i] = bigint_index_with_padding(a, i) | bigint_index_with_padding(b, i);
-	}
-
-	bigint_identify_pad_chunk_and_trim(res);
-	return res;
+	BIGINT_BINOP(a, b, |);
 }
 
 
 struct bigint *bigint_xor(const struct bigint *a, const struct bigint *b) {
-	if (a == NULL || b == NULL) {
-		return NULL;
-	}
-
-	int maxchunks = a->nchunk > b->nchunk ? a->nchunk : b->nchunk;
-
-	struct bigint *res = bigint_init(maxchunks);
-	if (res == NULL) {
-		return NULL;
-	}
-
-	for (int i = 0; i < maxchunks; i++) {
-		res->chunks[i] = bigint_index_with_padding(a, i) ^ bigint_index_with_padding(b, i);
-	}
-
-	bigint_identify_pad_chunk_and_trim(res);
-	return res;
+	BIGINT_BINOP(a, b, ^);
 }
 
 
