@@ -23,31 +23,30 @@ enum {
 	NIBBLE_MSB_MASK = 1<<NIBBLE_MSB,
 };
 
-
-const char *bigint_hex_charset = "0123456789abcdef";
-const unsigned long pad_chunks[] = {0, ULONG_MAX};
-
-
 struct bigint {
-	unsigned long *chunks;
 	int nchunk;
 	unsigned long pad_chunk;
+	unsigned long chunks[];
 };
+#define BIGINT_SIZE(nchunk) sizeof(struct bigint) + sizeof(*((struct bigint *)NULL)->chunks) * (nchunk)
+
+const char *bigint_hex_charset = "0123456789abcdef";
+enum pad_chunks {
+	PAD_CHUNK_POSITIVE = 0,
+	PAD_CHUNK_NEGATIVE = ULONG_MAX,
+};
+const unsigned long pad_chunks[] = {PAD_CHUNK_POSITIVE, PAD_CHUNK_NEGATIVE}; // indexed by MSB
+const struct bigint bigint_one = {.nchunk = 1, .pad_chunk = PAD_CHUNK_POSITIVE, .chunks = {1} };
 
 
 static struct bigint *bigint_init(int nchunk) {
 	assert(nchunk > 0);
-	struct bigint *n = (struct bigint *)malloc(sizeof(*n));
+	struct bigint *n = (struct bigint *)calloc(1, BIGINT_SIZE(nchunk));
 	if (n == NULL) {
 		return NULL;
 	}
 
 	n->nchunk = nchunk;
-	n->chunks = (unsigned long *)calloc(sizeof(*n->chunks), nchunk);
-	if (n->chunks == NULL) {
-		bigint_destroy(n);
-		return NULL;
-	}
 
 	return n;
 }
@@ -63,7 +62,7 @@ void TestBigint_init(CuTest *tc) {
 }
 
 
-static unsigned long bigint_index_with_padding(const struct bigint *n, unsigned int i) {
+static inline unsigned long bigint_index_with_padding(const struct bigint *n, unsigned int i) {
 	assert(n != NULL);
 	return i < n->nchunk ? n->chunks[i] : n->pad_chunk;
 }
@@ -85,7 +84,7 @@ void TestBigint_index_with_padding(CuTest *tc) {
 }
 
 
-static int bigint_msb(const struct bigint *n, int i) {
+static inline int bigint_msb(const struct bigint *n, int i) {
 	assert(n != NULL);
 	return bigint_index_with_padding(n, i) >> LONG_MSB;
 }
@@ -108,7 +107,6 @@ void TestBigint_msb(CuTest *tc) {
 
 void bigint_destroy(struct bigint *n) {
 	if (n != NULL) {
-		free(n->chunks);
 		free(n);
 	}
 }
@@ -171,11 +169,10 @@ static void bigint_identify_pad_chunk_and_trim(struct bigint *n) {
 
 	int new_nchunk = i+1;
 	if (new_nchunk != n->nchunk) {
+		assert(new_nchunk < n->nchunk);
 		n->nchunk = new_nchunk;
-		unsigned long *new_chunks = (unsigned long *)realloc(n->chunks, sizeof(*new_chunks)*n->nchunk);
-		if (new_chunks != NULL) {
-			n->chunks = new_chunks;
-		}
+		struct bigint *new_n = realloc(n, BIGINT_SIZE(new_nchunk));
+		assert(new_n == n);
 	}
 }
 void TestBigint_identify_pad_chunk_and_trim(CuTest *tc) {
@@ -683,23 +680,17 @@ struct bigint *bigint_negate(const struct bigint *n) {
 		return NULL;
 	}
 
-	struct bigint *bn_one = NULL, *not_n = NULL, *minus_n = NULL;
-
-	bn_one = bigint_from_long(1);
-	if (bn_one == NULL) {
-		goto cleanup;
-	}
+	struct bigint *not_n = NULL, *minus_n = NULL;
 
 	not_n = bigint_not(n);
 	if (not_n == NULL) {
 		goto cleanup;
 	}
 
-	minus_n = bigint_add(not_n, bn_one);
+	minus_n = bigint_add(not_n, &bigint_one);
 
 cleanup:
 	bigint_destroy(not_n);
-	bigint_destroy(bn_one);
 	return minus_n;
 }
 
