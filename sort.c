@@ -39,10 +39,8 @@ static int issorted(void *base, size_t nmemb, size_t size, bsort_categorizer cat
 	size_t max = 0;
 
 	void *eobase = base + (nmemb*size);
-	printf("\n");
 	for (void *p = base; p < eobase; p += size) {
 		size_t bucket = categorizer(p);
-		printf("%8x %8x\n", *((int *)p), bucket);
 		if (bucket < max) {
 			return 0;
 		} else {
@@ -72,7 +70,25 @@ void TestSort_odd_even(CuTest *tc) {
 }
 
 
-inline static void *bsort_end_of_sorted_base(void *base, size_t nmemb, size_t size, bsort_categorizer categorizer, size_t nbucket, void *buckets[]) {
+void bsort_partial(void *base, size_t nmemb, size_t size, bsort_categorizer categorizer, size_t nbucket, void *buckets[], void *base_unsorted) {
+	assert((base_unsorted-base) % size == 0);
+	void *eobase = base + (nmemb*size);
+	for (void *p = base_unsorted; p < eobase; p += size) {
+		size_t bucket = categorizer(p);
+		assert(bucket < nbucket);
+
+		void *slot = p;
+		for (int i = nbucket-1; i > bucket; i--) {
+			if (slot != buckets[i]) {
+				swap(buckets[i], slot, size);
+				slot = buckets[i];
+			}
+			buckets[i] += size;
+		}
+	}
+}
+
+inline static void *bsort_first_unsorted_element(void *base, size_t nmemb, size_t size, bsort_categorizer categorizer, size_t nbucket, void *buckets[]) {
 	size_t last_bucket = 0;
 	buckets[last_bucket] = base;
 
@@ -98,21 +114,8 @@ inline static void *bsort_end_of_sorted_base(void *base, size_t nmemb, size_t si
 }
 
 void bsort(void *base, size_t nmemb, size_t size, bsort_categorizer categorizer, size_t nbucket, void *buckets[]) {
-	void *eobase = base + (nmemb*size);
-	void *base_unsorted = bsort_end_of_sorted_base(base, nmemb, size, categorizer, nbucket, buckets);
-	for (void *p = base_unsorted; p < eobase; p += size) {
-		size_t bucket = categorizer(p);
-		assert(bucket < nbucket);
-
-		void *slot = p;
-		for (int i = nbucket-1; i > bucket; i--) {
-			if (slot != buckets[i]) {
-				swap(buckets[i], slot, size);
-				slot = buckets[i];
-			}
-			buckets[i] += size;
-		}
-	}
+	void *base_unsorted = bsort_first_unsorted_element(base, nmemb, size, categorizer, nbucket, buckets);
+	return bsort_partial(base, nmemb, size, categorizer, nbucket, buckets, base_unsorted);
 }
 
 size_t bsort_categorize_least_significant_nibble(const void *a) {
@@ -131,7 +134,9 @@ void TestBsort_odd_even(CuTest *tc) {
 
 	int *buckets[0x10];
 
-	CuAssertIntEquals(tc, 0, issorted(ints, NINT, sizeof(*ints), bsort_categorize_least_significant_nibble));
-	bsort(ints, NINT, sizeof(*ints), bsort_categorize_least_significant_nibble, 0x10, (void **)buckets);
+	CuAssertIntEquals(tc, 0, issorted(ints, NINT/2, sizeof(*ints), bsort_categorize_least_significant_nibble));
+	bsort(ints, NINT/2, sizeof(*ints), bsort_categorize_least_significant_nibble, 0x10, (void **)buckets);
+	CuAssertIntEquals(tc, 1, issorted(ints, NINT/2, sizeof(*ints), bsort_categorize_least_significant_nibble));
+	bsort_partial(ints, NINT, sizeof(*ints), bsort_categorize_least_significant_nibble, 0x10, (void **)buckets, ints + (NINT/2));
 	CuAssertIntEquals(tc, 1, issorted(ints, NINT, sizeof(*ints), bsort_categorize_least_significant_nibble));
 }
