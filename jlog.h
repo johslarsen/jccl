@@ -5,11 +5,13 @@
 #include <pthread.h>
 #include <stdio.h>
 
-/* logger format (mimicking log4j)
+/* A simple logger
+ *
+ * format conversion patterns (mimicking those from log4j):
  *
  * %%      => '%'
  * %c      => category
- * %d{...} => data and time in default format or strftime specified as ...
+ * %d{...} => data and time in default format or strftime format specified by ...
  * %F      => filename
  * %L      => line number
  * %l      => location := %M(%F:%L)
@@ -21,7 +23,7 @@
  * %t      => thread ID
  */
 
-enum jlog_tag {
+enum jlog_tag { // mimicking syslog
 	TEMERGENCY = 1<<0, //  system is unusable
 	TALERT     = 1<<1, //  action must be taken immediately
 	TCRITICAL  = 1<<2, //  critical conditions

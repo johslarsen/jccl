@@ -86,8 +86,16 @@ void vjlogprintf(const struct jlogger *logger, enum jlog_tag tag, const char *fu
 					case 'p': fprintf(output->fp, "0x%x", tag); break;
 					case 'r': fprintf(output->fp, "%lu", clock() / (CLOCKS_PER_SEC/1000)); break;
 					case 't': fprintf(output->fp, "0x%lx", pthread_self()); break;
+
+					// conversion characters defined in log4j, but not implemented
+					case 'C': // class
+					case 'x': // nested diagnostic context
+					case 'X': // mapped diagnostic context, user defined context fields
+						break;
+
 					default:
 						assert("unknown logger format conversion" == NULL);
+						break;
 				}
 			} else if (c == '%') {
 				convert = true;
