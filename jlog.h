@@ -6,7 +6,7 @@
 
 #ifndef JLOG_DEFAULT_TIMESTAMP_FORMAT
 #define JLOG_DEFAULT_TIMESTAMP_FORMAT "%Y-%m-%d %H:%M:%S %z"
-#endif /*JLOG_DEFAULT_TIMESTAMP*/
+#endif /*JLOG_DEFAULT_TIMESTAMP_FORMAT*/
 #ifndef JLOG_DEFAULT_SEPARATOR
 #define JLOG_DEFAULT_SEPARATOR "\t"
 #endif /*JLOG_DEFAULT_SEPARATOR*/
@@ -37,13 +37,16 @@ enum jlog_mask {
 
 enum jlog_field {
 	JLOG_FIELD_TIMESTAMP = 1<<0,
-	JLOG_FIELD_TAG =       1<<1,
-	JLOG_FIELD_PREFIX =    1<<2,
-	JLOG_FIELD_FILENAME =  1<<3,
-	JLOG_FIELD_FILEPOS =   1<<4,
-	JLOG_FIELD_MESSAGE =   1<<5,
+	JLOG_FIELD_TICKS =     1<<1,
+	JLOG_FIELD_TAG =       1<<2,
+	JLOG_FIELD_CONTEXT =   1<<3,
+	JLOG_FIELD_PREFIX =    1<<4,
+	JLOG_FIELD_FILENAME =  1<<5,
+	JLOG_FIELD_FILEPOS =   1<<6,
+	JLOG_FIELD_THREAD =    1<<7,
+	JLOG_FIELD_MESSAGE =   1<<8,
 
-	JLOG_FIELDS_ALL =      (1<<6)-1,
+	JLOG_FIELDS_ALL =      (1<<9)-1,
 	JLOG_FIELDS_MINIMAL =  JLOG_FIELD_TIMESTAMP | JLOG_FIELD_MESSAGE,
 };
 
@@ -63,10 +66,12 @@ struct jlogger_writer {
 	const char *separator;
 };
 struct jlogger {
+	const char *context;
 	size_t nwriter;
 	struct jlogger_writer writers[];
 };
-#define JLOG_STATIC_INIT(nwriter, mask, timezone, field_mask) {\
+#define JLOG_STATIC_INIT(context, nwriter, mask, timezone, field_mask) {\
+	context,\
 	nwriter,\
 	{\
 		[0 ... nwriter-1] = {\

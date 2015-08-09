@@ -1,4 +1,5 @@
 #include <assert.h>
+#include <pthread.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -37,8 +38,16 @@ void vjlogprintf(const struct jlogger *logger, enum jlog_tag tag, const char *pr
 			fprintf(writer->fp, "%s%s", prefix_separator?writer->separator:"", timestamp);
 			prefix_separator = 1;
 		}
+		if (writer->field_mask & JLOG_FIELD_TICKS) {
+			fprintf(writer->fp, "%s%lu", prefix_separator?writer->separator:"", clock());
+			prefix_separator = 1;
+		}
 		if (writer->field_mask & JLOG_FIELD_TAG) {
 			fprintf(writer->fp, "%s0x%x", prefix_separator?writer->separator:"", tag);
+			prefix_separator = 1;
+		}
+		if ((writer->field_mask & JLOG_FIELD_CONTEXT) && logger->context != NULL) {
+			fprintf(writer->fp, "%s0x%x", prefix_separator?writer->separator:"", logger->context);
 			prefix_separator = 1;
 		}
 		if (writer->field_mask & JLOG_FIELD_PREFIX) {
@@ -47,9 +56,15 @@ void vjlogprintf(const struct jlogger *logger, enum jlog_tag tag, const char *pr
 		}
 		if (writer->field_mask & JLOG_FIELD_FILENAME) {
 			fprintf(writer->fp, "%s%s", prefix_separator?writer->separator:"", filename);
+			prefix_separator = 1;
 		}
 		if (writer->field_mask & JLOG_FIELD_FILEPOS) {
 			fprintf(writer->fp, "%s%lu", prefix_separator?writer->separator:"", linenumber);
+			prefix_separator = 1;
+		}
+		if (writer->field_mask & JLOG_FIELD_THREAD) {
+			fprintf(writer->fp, "%s%lu", prefix_separator?writer->separator:"", pthread_self());
+			prefix_separator = 1;
 		}
 		if (writer->field_mask & JLOG_FIELD_MESSAGE) {
 			fprintf(writer->fp, "%s", prefix_separator?writer->separator:"");
@@ -66,7 +81,7 @@ void vjlogprintf(const struct jlogger *logger, enum jlog_tag tag, const char *pr
 }
 
 void TestJlogNoSegfaultOnInitializedStructure(CuTest *tc) {
-	static struct jlogger jlogger = JLOG_STATIC_INIT(1, JLOG_MASK_EVERYTHING, JLOG_TIMEZONE_UTC, JLOG_FIELDS_ALL);
+	static struct jlogger jlogger = JLOG_STATIC_INIT("foo", 1, JLOG_MASK_EVERYTHING, JLOG_TIMEZONE_UTC, JLOG_FIELDS_ALL);
 	jlog(&jlogger, TWARN, NULL, "Where do I get printed?");
 }
 
@@ -76,7 +91,7 @@ void TestJlogMessageAndPrefixExists(CuTest *tc) {
 
 	FILE *fp = tmpfile();
 
-	static struct jlogger jlogger = JLOG_STATIC_INIT(2, JLOG_MASK_EVERYTHING, JLOG_TIMEZONE_UTC, JLOG_FIELDS_ALL);
+	static struct jlogger jlogger = JLOG_STATIC_INIT("foo", 2, JLOG_MASK_EVERYTHING, JLOG_TIMEZONE_UTC, JLOG_FIELDS_ALL);
 	jlogger.writers[0].fp = fp;
 
 	jlog(&jlogger, TINFO, PREFIX, MSG);
@@ -101,7 +116,7 @@ void TestJlogMasking(CuTest *tc) {
 	FILE *everything = tmpfile();
 	FILE *warnings = tmpfile();
 
-	static struct jlogger jlogger = JLOG_STATIC_INIT(2, JLOG_MASK_EVERYTHING, JLOG_TIMEZONE_UTC, JLOG_FIELDS_ALL);
+	static struct jlogger jlogger = JLOG_STATIC_INIT("foo", 2, JLOG_MASK_EVERYTHING, JLOG_TIMEZONE_UTC, JLOG_FIELDS_ALL);
 	jlogger.writers[0].fp = everything;
 	jlogger.writers[1].fp = warnings;
 	jlogger.writers[1].mask = JLOG_MASK_WARN;
@@ -125,7 +140,7 @@ void TestJlogFieldMask(CuTest *tc) {
 	FILE *normal = tmpfile();
 	FILE *without_tags = tmpfile();
 
-	static struct jlogger jlogger = JLOG_STATIC_INIT(2, JLOG_MASK_EVERYTHING, JLOG_TIMEZONE_UTC, JLOG_FIELDS_ALL);
+	static struct jlogger jlogger = JLOG_STATIC_INIT("foo", 2, JLOG_MASK_EVERYTHING, JLOG_TIMEZONE_UTC, JLOG_FIELDS_ALL);
 	jlogger.writers[0].fp = normal;
 	jlogger.writers[1].fp = without_tags;
 	jlogger.writers[1].field_mask ^= JLOG_FIELD_TAG;
@@ -138,17 +153,17 @@ void TestJlogFieldMask(CuTest *tc) {
 	size_t nread;
 	nread = fread(buf, 1, sizeof(buf), normal);
 	buf[nread] = '\0';
-	CuAssertIntEquals(tc, 5, strcount(buf, JLOG_DEFAULT_SEPARATOR));
+	CuAssertIntEquals(tc, 8, strcount(buf, JLOG_DEFAULT_SEPARATOR));
 	nread = fread(buf, 1, sizeof(buf), without_tags);
 	buf[nread] = '\0';
-	CuAssertIntEquals(tc, 4, strcount(buf, JLOG_DEFAULT_SEPARATOR));
+	CuAssertIntEquals(tc, 7, strcount(buf, JLOG_DEFAULT_SEPARATOR));
 }
 
 void TestJlogTimeformatAndTimezone(CuTest *tc) {
 	FILE *utc = tmpfile();
 	FILE *local = tmpfile();
 
-	static struct jlogger jlogger = JLOG_STATIC_INIT(2, JLOG_MASK_EVERYTHING, JLOG_TIMEZONE_UTC, JLOG_FIELD_TIMESTAMP);
+	static struct jlogger jlogger = JLOG_STATIC_INIT("foo", 2, JLOG_MASK_EVERYTHING, JLOG_TIMEZONE_UTC, JLOG_FIELD_TIMESTAMP);
 	jlogger.writers[0].fp = utc;
 	jlogger.writers[0].timestamp_format = "%H";
 	jlogger.writers[1].fp = local;
@@ -180,7 +195,7 @@ void TestJlogCustomTags(CuTest *tc) {
 	FILE *predefined = tmpfile();
 	FILE *custom = tmpfile();
 
-	static struct jlogger jlogger = JLOG_STATIC_INIT(2, JLOG_MASK_DEBUG, JLOG_TIMEZONE_UTC, JLOG_FIELDS_ALL);
+	static struct jlogger jlogger = JLOG_STATIC_INIT("foo", 2, JLOG_MASK_DEBUG, JLOG_TIMEZONE_UTC, JLOG_FIELDS_ALL);
 	jlogger.writers[0].fp = predefined;
 	jlogger.writers[1].fp = custom;
 	jlogger.writers[1].mask |= CUSTOM_TAG;
