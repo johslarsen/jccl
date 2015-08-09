@@ -8,6 +8,22 @@
 #include "jlog.h"
 #include "CuTest/CuTest.h"
 
+static inline void write_timestamp(const struct jlogger_writer *writer) {
+	char timestamp[64];
+	time_t now = time(NULL);
+	struct tm tm;
+	switch (writer->timezone) {
+	case JLOG_TIMEZONE_UTC:   gmtime_r(&now, &tm); break;
+	case JLOG_TIMEZONE_LOCAL: localtime_r(&now, &tm); break;
+	default:
+		assert("unknown timezone" == NULL);
+		break;
+	}
+	strftime(timestamp, sizeof(timestamp), writer->timestamp_format, &tm);
+
+	fprintf(writer->fp, "%s", timestamp);
+}
+
 void vjlogprintf(const struct jlogger *logger, enum jlog_tag tag, const char *prefix, const char *filename, size_t linenumber, const char *fmt, ...) {
 	va_list original_args;
 	va_start(original_args, fmt);
@@ -17,62 +33,35 @@ void vjlogprintf(const struct jlogger *logger, enum jlog_tag tag, const char *pr
 			continue;
 		}
 
-		int prefix_separator = 0;
-		if (writer->field_mask & JLOG_FIELD_TIMESTAMP) {
-			char timestamp[64];
-			time_t now = time(NULL);
-			struct tm tm;
-			switch (writer->timezone) {
-			case JLOG_TIMEZONE_UTC:
-				gmtime_r(&now, &tm);
-				break;
-			case JLOG_TIMEZONE_LOCAL:
-				localtime_r(&now, &tm);
-				break;
-			default:
-				assert(": unknown timezone" == NULL);
+		for (enum jlog_field field = 1; field < JLOG_FIELDS_ALL; field <<= 1) {
+			if ((writer->field_mask & field) == 0) {
+				continue;
+			}
+			if ((writer->field_mask & (field-1))) { // any previous fields
+				fprintf(writer->fp, "%s", writer->separator);
+			}
+
+			switch(field) {
+			case JLOG_FIELD_CONTEXT:   fprintf(writer->fp, "%s", logger->context!=NULL?logger->context:""); break;
+			case JLOG_FIELD_FILENAME:  fprintf(writer->fp, "%s", filename); break;
+			case JLOG_FIELD_FILEPOS:   fprintf(writer->fp, "%lu", linenumber); break;
+			case JLOG_FIELD_PREFIX:    fprintf(writer->fp, "%s", prefix!=NULL?prefix:""); break;
+			case JLOG_FIELD_TAG:       fprintf(writer->fp, "0x%x", tag); break;
+			case JLOG_FIELD_THREAD:    fprintf(writer->fp, "0x%lx", pthread_self()); break;
+			case JLOG_FIELD_TICKS:     fprintf(writer->fp, "%lu", clock()); break;
+			case JLOG_FIELD_TIMESTAMP: write_timestamp(writer); break;
+
+			case JLOG_FIELD_MESSAGE: {
+				va_list args;
+				va_copy(args, original_args);
+				vfprintf(writer->fp, fmt, args);
 				break;
 			}
-			strftime(timestamp, sizeof(timestamp), writer->timestamp_format, &tm);
 
-			fprintf(writer->fp, "%s%s", prefix_separator?writer->separator:"", timestamp);
-			prefix_separator = 1;
-		}
-		if (writer->field_mask & JLOG_FIELD_TICKS) {
-			fprintf(writer->fp, "%s%lu", prefix_separator?writer->separator:"", clock());
-			prefix_separator = 1;
-		}
-		if (writer->field_mask & JLOG_FIELD_TAG) {
-			fprintf(writer->fp, "%s0x%x", prefix_separator?writer->separator:"", tag);
-			prefix_separator = 1;
-		}
-		if ((writer->field_mask & JLOG_FIELD_CONTEXT) && logger->context != NULL) {
-			fprintf(writer->fp, "%s0x%x", prefix_separator?writer->separator:"", logger->context);
-			prefix_separator = 1;
-		}
-		if (writer->field_mask & JLOG_FIELD_PREFIX) {
-			fprintf(writer->fp, "%s%s", prefix_separator?writer->separator:"", prefix == NULL ? "" : prefix);
-			prefix_separator = 1;
-		}
-		if (writer->field_mask & JLOG_FIELD_FILENAME) {
-			fprintf(writer->fp, "%s%s", prefix_separator?writer->separator:"", filename);
-			prefix_separator = 1;
-		}
-		if (writer->field_mask & JLOG_FIELD_FILEPOS) {
-			fprintf(writer->fp, "%s%lu", prefix_separator?writer->separator:"", linenumber);
-			prefix_separator = 1;
-		}
-		if (writer->field_mask & JLOG_FIELD_THREAD) {
-			fprintf(writer->fp, "%s%lu", prefix_separator?writer->separator:"", pthread_self());
-			prefix_separator = 1;
-		}
-		if (writer->field_mask & JLOG_FIELD_MESSAGE) {
-			fprintf(writer->fp, "%s", prefix_separator?writer->separator:"");
-			prefix_separator = 1;
-
-			va_list args;
-			va_copy(args, original_args);
-			vfprintf(writer->fp, fmt, args);
+			default:
+				assert("unknown field" == NULL);
+				break;
+			}
 		}
 		fprintf(writer->fp, "\n");
 		fflush(writer->fp);
@@ -81,7 +70,7 @@ void vjlogprintf(const struct jlogger *logger, enum jlog_tag tag, const char *pr
 }
 
 void TestJlogNoSegfaultOnInitializedStructure(CuTest *tc) {
-	static struct jlogger jlogger = JLOG_STATIC_INIT("foo", 1, JLOG_MASK_EVERYTHING, JLOG_TIMEZONE_UTC, JLOG_FIELDS_ALL);
+	static struct jlogger jlogger = JLOG_STATIC_INIT(NULL, 1, JLOG_MASK_EVERYTHING, JLOG_TIMEZONE_UTC, JLOG_FIELDS_ALL);
 	jlog(&jlogger, TWARN, NULL, "Where do I get printed?");
 }
 
