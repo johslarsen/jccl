@@ -1,6 +1,7 @@
 #include <assert.h>
 #include <pthread.h>
 #include <stdarg.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -10,7 +11,7 @@
 #include "jlog.h"
 #include "CuTest/CuTest.h"
 
-static inline void write_timestamp(const struct jlog_writer_output *output) {
+static inline void write_timestamp(const struct jlog_writer_output *output, const char *format) {
 	char timestamp[64];
 	time_t now = time(NULL);
 	struct tm tm;
@@ -21,12 +22,24 @@ static inline void write_timestamp(const struct jlog_writer_output *output) {
 		assert("unknown timezone" == NULL);
 		break;
 	}
-	strftime(timestamp, sizeof(timestamp), output->timestamp_format, &tm);
+	strftime(timestamp, sizeof(timestamp), format, &tm);
 
 	fprintf(output->fp, "%s", timestamp);
 }
+static inline const char *extract_convert_parameter(char *buf, size_t nbuf, const char *format) {
+	const char *sof = format+2; // format char + '{'
+	const char *eof = strchr(sof, '}');
+	assert(eof != NULL);
 
-void vjlogprintf(const struct jlogger *logger, enum jlog_tag tag, const char *prefix, const char *filename, size_t linenumber, const char *fmt, ...) {
+	size_t nf = eof-sof;
+	assert(nf < sizeof(buf));
+	strncpy(buf, sof, nf);
+	buf[nf] = '\0';
+
+	return eof;
+}
+
+void vjlogprintf(const struct jlogger *logger, enum jlog_tag tag, const char *function, const char *filename, size_t linenumber, const char *fmt, ...) {
 	va_list original_args;
 	va_start(original_args, fmt);
 	if (logger->writer == NULL) {
@@ -41,37 +54,49 @@ void vjlogprintf(const struct jlogger *logger, enum jlog_tag tag, const char *pr
 			continue;
 		}
 
-		for (enum jlog_field field = 1; field < JLOG_FIELDS_ALL; field <<= 1) {
-			if ((output->field_mask & field) == 0) {
-				continue;
-			}
-			if ((output->field_mask & (field-1))) { // any previous fields
-				fprintf(output->fp, "%s", output->separator);
-			}
+		bool convert = false;
+		for (const char *p = output->format; *p != '\0'; p++) {
+			char c = *p;
+			if (convert) {
+				convert = false;
 
-			switch(field) {
-			case JLOG_FIELD_CONTEXT:   fprintf(output->fp, "%s", logger->context!=NULL?logger->context:""); break;
-			case JLOG_FIELD_FILENAME:  fprintf(output->fp, "%s", filename); break;
-			case JLOG_FIELD_FILEPOS:   fprintf(output->fp, "%lu", linenumber); break;
-			case JLOG_FIELD_PREFIX:    fprintf(output->fp, "%s", prefix!=NULL?prefix:""); break;
-			case JLOG_FIELD_TAG:       fprintf(output->fp, "0x%x", tag); break;
-			case JLOG_FIELD_THREAD:    fprintf(output->fp, "0x%lx", pthread_self()); break;
-			case JLOG_FIELD_TICKS:     fprintf(output->fp, "%lu", clock()); break;
-			case JLOG_FIELD_TIMESTAMP: write_timestamp(output); break;
-
-			case JLOG_FIELD_MESSAGE: {
-				va_list args;
-				va_copy(args, original_args);
-				vfprintf(output->fp, fmt, args);
-				break;
-			}
-
-			default:
-				assert("unknown field" == NULL);
-				break;
+				switch(c) {
+					case '%': fputc('%', output->fp);
+					case 'c': fprintf(output->fp, "%s", logger->category!=NULL?logger->category:""); break;
+					case 'd':
+						if (*(p+1) == '{') {
+							char timeformat[64];
+							p = extract_convert_parameter(timeformat, sizeof(timeformat), p);
+							write_timestamp(output, timeformat);
+						} else {
+							write_timestamp(output, JLOG_DEFAULT_TIMESTAMP_FORMAT);
+						}
+						break;
+					case 'F': fprintf(output->fp, "%s", filename); break;
+					case 'L': fprintf(output->fp, "%lu", linenumber); break;
+					case 'l': fprintf(output->fp, "%s(%s:%lu)", function, filename, linenumber); break;
+					case 'm': {
+						va_list args;
+						va_copy(args, original_args);
+						vfprintf(output->fp, fmt, args);
+						break;
+					}
+					case 'M': fprintf(output->fp, "%s", function); break;
+					case 'n': fputc('\n', output->fp);
+					case 'p': fprintf(output->fp, "0x%x", tag); break;
+					case 'r': fprintf(output->fp, "%lu", clock() / (CLOCKS_PER_SEC/1000)); break;
+					case 't': fprintf(output->fp, "0x%lx", pthread_self()); break;
+					default:
+						assert("unknown logger format conversion" == NULL);
+				}
+			} else if (c == '%') {
+				convert = true;
+			} else {
+				putc(c, output->fp);
 			}
 		}
-		fprintf(output->fp, "\n");
+
+		fputc('\n', output->fp);
 		fflush(output->fp);
 	}
 
@@ -82,31 +107,42 @@ void vjlogprintf(const struct jlogger *logger, enum jlog_tag tag, const char *pr
 
 void TestJlogNoSegfaultOnInitilizedLoggerWithoutWriters(CuTest *tc) {
 	static struct jlogger jlogger = JLOGGER_STATIC_INIT("foo", JLOG_MASK_EVERYTHING, NULL);
-	jlog(&jlogger, TWARN, NULL, "Where do I get printed?");
+	jlog(&jlogger, TWARN, "Where do I get printed?");
 }
 
 void TestJlogNoSegfaultOnInitializedStructure(CuTest *tc) {
-	static struct jlog_writer jwriter = JLOG_WRITER_STATIC_INIT(1, JLOG_MASK_EVERYTHING, JLOG_FIELDS_ALL);
+	static struct jlog_writer jwriter = JLOG_WRITER_STATIC_INIT(1, JLOG_MASK_EVERYTHING, JLOG_FORMAT_EXTENSIVE);
 	static struct jlogger jlogger = JLOGGER_STATIC_INIT("foo", JLOG_MASK_EVERYTHING, &jwriter);
-	jlog(&jlogger, TWARN, NULL, "Where do I get printed?");
+	jlog(&jlogger, TWARN, "Where do I get printed?");
 }
-void TestJlogMessageAndPrefixExists(CuTest *tc) {
+void TestJlogMessageAndCategoryExistInDefaultFormats(CuTest *tc) {
 #define MSG "Some message"
-#define PREFIX "PREFIX"
+#define CATEGORY "A category"
 
-	FILE *fp = tmpfile();
+	FILE *extensive = tmpfile();
+	FILE *minimal = tmpfile();
 
-	static struct jlog_writer jwriter = JLOG_WRITER_STATIC_INIT(1, JLOG_MASK_EVERYTHING, JLOG_FIELDS_ALL);
-	jwriter.outputs[0].fp = fp;
-	static struct jlogger jlogger = JLOGGER_STATIC_INIT("foo", JLOG_MASK_EVERYTHING, &jwriter);
+	static struct jlog_writer jwriter = JLOG_WRITER_STATIC_INIT(2, JLOG_MASK_EVERYTHING, JLOG_FORMAT_EXTENSIVE);
+	jwriter.outputs[0].fp = extensive;
+	jwriter.outputs[1].fp = minimal;
+	jwriter.outputs[1].format = JLOG_FORMAT_MINIMAL;
 
-	jlog(&jlogger, TINFO, PREFIX, MSG);
-	rewind(fp);
+	static struct jlogger jlogger = JLOGGER_STATIC_INIT(CATEGORY, JLOG_MASK_EVERYTHING, &jwriter);
+
+	jlog(&jlogger, TINFO, MSG);
+	rewind(extensive);
+	rewind(minimal);
 
 	char buf[1024];
-	fread(buf, 1, sizeof(buf), fp);
-	CuAssertPtrNotNull(tc, strstr(buf, PREFIX));
+	size_t nread;
+	nread = fread(buf, 1, sizeof(buf), extensive);
+	buf[nread] = '\0';
 	CuAssertPtrNotNull(tc, strstr(buf, MSG));
+	CuAssertPtrNotNull(tc, strstr(buf, CATEGORY));
+	nread = fread(buf, 1, sizeof(buf), minimal);
+	buf[nread] = '\0';
+	CuAssertPtrNotNull(tc, strstr(buf, MSG));
+	CuAssertPtrNotNull(tc, strstr(buf, CATEGORY));
 }
 
 static size_t strcount(const char *haystack, const char *needle) {
@@ -122,14 +158,14 @@ void TestJlogMasking(CuTest *tc) {
 	FILE *everything = tmpfile();
 	FILE *warnings = tmpfile();
 
-	static struct jlog_writer jwriter = JLOG_WRITER_STATIC_INIT(2, JLOG_MASK_EVERYTHING, JLOG_FIELDS_ALL);
+	static struct jlog_writer jwriter = JLOG_WRITER_STATIC_INIT(2, JLOG_MASK_EVERYTHING, JLOG_FORMAT_EXTENSIVE);
 	jwriter.outputs[0].fp = everything;
 	jwriter.outputs[1].fp = warnings;
 	jwriter.outputs[1].mask = JLOG_MASK_WARN;
 	static struct jlogger jlogger = JLOGGER_STATIC_INIT("foo", JLOG_MASK_EVERYTHING, &jwriter);
 
-	jlog(&jlogger, TINFO, NULL, "A message with %d printf arguments", 1);
-	jlog(&jlogger, TWARN, NULL, "A warning");
+	jlog(&jlogger, TINFO, "A message with %d printf arguments", 1);
+	jlog(&jlogger, TWARN, "A warning");
 	rewind(everything);
 	rewind(warnings);
 
@@ -143,45 +179,19 @@ void TestJlogMasking(CuTest *tc) {
 	CuAssertIntEquals(tc, 1, strcount(buf, "\n"));
 }
 
-void TestJlogFieldMask(CuTest *tc) {
-	FILE *normal = tmpfile();
-	FILE *without_tags = tmpfile();
-
-	static struct jlog_writer jwriter = JLOG_WRITER_STATIC_INIT(2, JLOG_MASK_EVERYTHING, JLOG_FIELDS_ALL);
-	jwriter.outputs[0].fp = normal;
-	jwriter.outputs[1].fp = without_tags;
-	jwriter.outputs[1].field_mask ^= JLOG_FIELD_TAG;
-	static struct jlogger jlogger = JLOGGER_STATIC_INIT("foo", JLOG_MASK_EVERYTHING, &jwriter);
-
-	jlog(&jlogger, TINFO, NULL, "Some message");
-	rewind(normal);
-	rewind(without_tags);
-
-	char buf[1024];
-	size_t nread;
-	nread = fread(buf, 1, sizeof(buf), normal);
-	buf[nread] = '\0';
-	CuAssertIntEquals(tc, 8, strcount(buf, JLOG_DEFAULT_SEPARATOR));
-	nread = fread(buf, 1, sizeof(buf), without_tags);
-	buf[nread] = '\0';
-	CuAssertIntEquals(tc, 7, strcount(buf, JLOG_DEFAULT_SEPARATOR));
-}
-
 void TestJlogTimeformatAndTimezone(CuTest *tc) {
 	FILE *utc = tmpfile();
 	FILE *local = tmpfile();
 
-	static struct jlog_writer jwriter = JLOG_WRITER_STATIC_INIT(2, JLOG_MASK_EVERYTHING, JLOG_FIELDS_ALL);
+	static struct jlog_writer jwriter = JLOG_WRITER_STATIC_INIT(2, JLOG_MASK_EVERYTHING, "%d{%H}");
 	jwriter.outputs[0].fp = utc;
-	jwriter.outputs[0].timestamp_format = "%H";
 	jwriter.outputs[1].fp = local;
-	jwriter.outputs[1].timestamp_format = "%H";
 	jwriter.outputs[1].timezone = JLOG_TIMEZONE_LOCAL;
 	static struct jlogger jlogger = JLOGGER_STATIC_INIT("foo", JLOG_MASK_EVERYTHING, &jwriter);
 
 
 	time_t now = time(NULL);
-	jlog(&jlogger, TINFO, NULL, "Some message");
+	jlog(&jlogger, TINFO, "Some message");
 	rewind(utc);
 	rewind(local);
 
@@ -200,20 +210,20 @@ void TestJlogTimeformatAndTimezone(CuTest *tc) {
 
 void *logger_thread(void *struct_jlogger) {
 	struct jlogger *jlogger = (struct jlogger *)struct_jlogger;
-	jlog(jlogger, TINFO, NULL, "Logging from a pthread child");
+	jlog(jlogger, TINFO, "Logging from a pthread child");
 	return NULL;
 }
 void TestJlogThreaded(CuTest *tc) {
 	FILE *fp = tmpfile();
 
-	static struct jlog_writer jwriter = JLOG_WRITER_STATIC_INIT(1, JLOG_MASK_EVERYTHING, JLOG_FIELD_THREAD);
+	static struct jlog_writer jwriter = JLOG_WRITER_STATIC_INIT(1, JLOG_MASK_EVERYTHING, "%t");
 	jwriter.outputs[0].fp = fp;
 	static struct jlogger jlogger = JLOGGER_STATIC_INIT("foo", JLOG_MASK_EVERYTHING, &jwriter);
 
 	pthread_t pthread;
 	pthread_create(&pthread, NULL, logger_thread, &jlogger);
 
-	jlog(&jlogger, TINFO, NULL, "Logging from parent thread");
+	jlog(&jlogger, TINFO, "Logging from parent thread");
 
 	pthread_join(pthread, NULL);
 
@@ -234,13 +244,13 @@ void TestJlogCustomTags(CuTest *tc) {
 	FILE *predefined = tmpfile();
 	FILE *custom = tmpfile();
 
-	static struct jlog_writer jwriter = JLOG_WRITER_STATIC_INIT(2, JLOG_MASK_DEBUG, JLOG_FIELDS_ALL);
+	static struct jlog_writer jwriter = JLOG_WRITER_STATIC_INIT(2, JLOG_MASK_DEBUG, JLOG_FORMAT_EXTENSIVE);
 	jwriter.outputs[0].fp = predefined;
 	jwriter.outputs[1].fp = custom;
 	jwriter.outputs[1].mask |= CUSTOM_TAG;
 	static struct jlogger jlogger = JLOGGER_STATIC_INIT("foo", JLOG_MASK_EVERYTHING, &jwriter);
 
-	jlog(&jlogger, CUSTOM_TAG, NULL, "Some message");
+	jlog(&jlogger, CUSTOM_TAG, "Some message");
 	rewind(predefined);
 	rewind(custom);
 
@@ -254,19 +264,19 @@ void TestJlogCustomTags(CuTest *tc) {
 	CuAssertIntEquals(tc, 1, strcount(buf, "\n"));
 }
 
-void TestJlogContext(CuTest *tc) {
+void TestJlogCategory(CuTest *tc) {
 	FILE *fp = tmpfile();
 
-	static struct jlog_writer jwriter = JLOG_WRITER_STATIC_INIT(1, JLOG_MASK_EVERYTHING, JLOG_FIELD_CONTEXT);
+	static struct jlog_writer jwriter = JLOG_WRITER_STATIC_INIT(1, JLOG_MASK_EVERYTHING, "%c");
 	jwriter.outputs[0].fp = fp;
 
 	static struct jlogger jlogger_everything = JLOGGER_STATIC_INIT("everything", JLOG_MASK_EVERYTHING, &jwriter);
 	static struct jlogger jlogger_errors = JLOGGER_STATIC_INIT("errors", JLOG_MASK_ERROR, &jwriter);
 
-	jlog(&jlogger_everything, TERROR, NULL, "An error");
-	jlog(&jlogger_everything, TINFO, NULL, "Some information");
-	jlog(&jlogger_errors, TERROR, NULL, "An error");
-	jlog(&jlogger_errors, TINFO, NULL, "Some information"); // should not be logged
+	jlog(&jlogger_everything, TERROR, "An error");
+	jlog(&jlogger_everything, TINFO, "Some information");
+	jlog(&jlogger_errors, TERROR, "An error");
+	jlog(&jlogger_errors, TINFO, "Some information"); // should not be logged
 
 	rewind(fp);
 

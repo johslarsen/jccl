@@ -5,12 +5,21 @@
 #include <pthread.h>
 #include <stdio.h>
 
-#ifndef JLOG_DEFAULT_TIMESTAMP_FORMAT
-#define JLOG_DEFAULT_TIMESTAMP_FORMAT "%Y-%m-%d %H:%M:%S %z"
-#endif /*JLOG_DEFAULT_TIMESTAMP_FORMAT*/
-#ifndef JLOG_DEFAULT_SEPARATOR
-#define JLOG_DEFAULT_SEPARATOR "\t"
-#endif /*JLOG_DEFAULT_SEPARATOR*/
+/* logger format (mimicking log4j)
+ *
+ * %%      => '%'
+ * %c      => category
+ * %d{...} => data and time in default format or strftime specified as ...
+ * %F      => filename
+ * %L      => line number
+ * %l      => location := %M(%F:%L)
+ * %m      => message
+ * %M      => method name
+ * %n      => '\n'
+ * %p      => priority, aka. tag
+ * %r      => milliseconds since start of program, integer
+ * %t      => thread ID
+ */
 
 enum jlog_tag {
 	TEMERGENCY = 1<<0, //  system is unusable
@@ -36,76 +45,67 @@ enum jlog_mask {
 	JLOG_MASK_DEBUG     = (TDEBUG << 1) - 1,
 };
 
-enum jlog_field {
-	JLOG_FIELD_TIMESTAMP = 1<<0,
-	JLOG_FIELD_TICKS =     1<<1,
-	JLOG_FIELD_TAG =       1<<2,
-	JLOG_FIELD_CONTEXT =   1<<3,
-	JLOG_FIELD_PREFIX =    1<<4,
-	JLOG_FIELD_FILENAME =  1<<5,
-	JLOG_FIELD_FILEPOS =   1<<6,
-	JLOG_FIELD_THREAD =    1<<7,
-	JLOG_FIELD_MESSAGE =   1<<8,
+#ifndef JLOG_DEFAULT_TIMESTAMP_FORMAT
+#define JLOG_DEFAULT_TIMESTAMP_FORMAT "%Y-%m-%d %H:%M:%S %z"
+#endif /*JLOG_DEFAULT_TIMESTAMP_FORMAT*/
 
-	JLOG_FIELDS_ALL =      (1<<9)-1,
-	JLOG_FIELDS_MINIMAL =  JLOG_FIELD_TIMESTAMP | JLOG_FIELD_CONTEXT | JLOG_FIELD_MESSAGE,
-};
+#ifndef JLOG_FORMAT_MINIMAL
+#define JLOG_FORMAT_MINIMAL "%d\t%c\t%m"
+#endif /*JLOG_FORMAT_MINIMAL*/
+#ifndef JLOG_FORMAT_EXTENSIVE
+#define JLOG_FORMAT_EXTENSIVE "%d\t%r\t%t\t%l\t%p\t%c\t%m"
+#endif /*JLOG_FORMAT_EXTENSIVE*/
 
 enum jlog_timezone {
 	JLOG_TIMEZONE_UTC,
 	JLOG_TIMEZONE_LOCAL,
 };
 
-
 struct jlog_writer_output {
 	FILE *fp;
 	unsigned long mask;
 
+	const char *format;
 	enum jlog_timezone timezone;
-	enum jlog_field field_mask;
-	const char *timestamp_format;
-	const char *separator;
 };
 struct jlog_writer {
 	pthread_mutex_t mutex;
 	size_t noutput;
 	struct jlog_writer_output outputs[];
 };
-#define JLOG_WRITER_STATIC_INIT(nwriter, mask, field_mask) {\
+#define JLOG_WRITER_STATIC_INIT(nwriter, mask, format) {\
 	PTHREAD_MUTEX_INITIALIZER,\
 	nwriter,\
 	{\
 		[0 ... nwriter-1] = {\
 			NULL,\
 			mask,\
+			format,\
 			JLOG_TIMEZONE_UTC,\
-			field_mask,\
-			JLOG_DEFAULT_TIMESTAMP_FORMAT,\
-			JLOG_DEFAULT_SEPARATOR,\
 		}\
 	}\
 }
 
 struct jlogger {
-	const char *context;
+	const char *category;
 	unsigned long mask;
 
 	struct jlog_writer *writer;
 };
-#define JLOGGER_STATIC_INIT(context, mask, writer) {\
-	context,\
+#define JLOGGER_STATIC_INIT(category, mask, writer) {\
+	category,\
 	mask,\
 	writer,\
 }
 
-void vjlogprintf(const struct jlogger *logger, enum jlog_tag tag, const char *prefix, const char *filename, size_t linenumber, const char *fmt, ...);
+void vjlogprintf(const struct jlogger *logger, enum jlog_tag tag, const char *function, const char *filename, size_t linenumber, const char *fmt, ...);
 
 #ifdef JLOG_DISABLE
-#define jlog(logger, tag, prefix, ...) (void)0;
+#define jlog(logger, tag, ...) (void)0;
 #else
-#define jlog(logger, tag, prefix, ...) do {\
+#define jlog(logger, tag, ...) do {\
 	if (((logger)->mask & tag)) {\
-		vjlogprintf(logger, tag, prefix, __FILE__, __LINE__, __VA_ARGS__);\
+		vjlogprintf(logger, tag, __func__, __FILE__, __LINE__, __VA_ARGS__);\
 	}\
 } while(0)
 #endif /*JLOG_DISABLE*/
