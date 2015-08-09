@@ -1,8 +1,9 @@
 #ifndef JLOG_H
 #define JLOG_H
 
-#include <stdio.h>
 #include <limits.h>
+#include <pthread.h>
+#include <stdio.h>
 
 #ifndef JLOG_DEFAULT_TIMESTAMP_FORMAT
 #define JLOG_DEFAULT_TIMESTAMP_FORMAT "%Y-%m-%d %H:%M:%S %z"
@@ -66,10 +67,12 @@ struct jlog_writer_output {
 	const char *separator;
 };
 struct jlog_writer {
+	pthread_mutex_t mutex;
 	size_t noutput;
 	struct jlog_writer_output outputs[];
 };
 #define JLOG_WRITER_STATIC_INIT(nwriter, mask, field_mask) {\
+	PTHREAD_MUTEX_INITIALIZER,\
 	nwriter,\
 	{\
 		[0 ... nwriter-1] = {\

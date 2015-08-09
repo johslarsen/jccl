@@ -3,7 +3,7 @@ CFLAGS         := -pipe -g -p -Wall --std=gnu11
 
 RM             := rm -f
 
-LIBS           := -lm
+LIBS           := -lm -lpthread
 
 CUTEST_SRC     := CuTest/CuTest.c
 TEST_SUITE     := AllTests

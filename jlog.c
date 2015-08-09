@@ -4,7 +4,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/wait.h>
 #include <time.h>
+#include <unistd.h>
 #include "jlog.h"
 #include "CuTest/CuTest.h"
 
@@ -30,6 +32,9 @@ void vjlogprintf(const struct jlogger *logger, enum jlog_tag tag, const char *pr
 	if (logger->writer == NULL) {
 		return;
 	}
+
+	pthread_mutex_lock(&logger->writer->mutex);
+
 	for (int i = 0; i < logger->writer->noutput; i++) {
 		const struct jlog_writer_output *output = &logger->writer->outputs[i];
 		if ((output->mask & tag) == 0 || output->fp == NULL) {
@@ -69,6 +74,9 @@ void vjlogprintf(const struct jlogger *logger, enum jlog_tag tag, const char *pr
 		fprintf(output->fp, "\n");
 		fflush(output->fp);
 	}
+
+	pthread_mutex_unlock(&logger->writer->mutex);
+
 	va_end(original_args);
 }
 
@@ -190,6 +198,35 @@ void TestJlogTimeformatAndTimezone(CuTest *tc) {
 	CuAssertIntEquals(tc, localtm.tm_hour-utctm.tm_hour, local_hour-utc_hour);
 }
 
+void *logger_thread(void *struct_jlogger) {
+	struct jlogger *jlogger = (struct jlogger *)struct_jlogger;
+	jlog(jlogger, TINFO, NULL, "Logging from a pthread child");
+	return NULL;
+}
+void TestJlogThreaded(CuTest *tc) {
+	FILE *fp = tmpfile();
+
+	static struct jlog_writer jwriter = JLOG_WRITER_STATIC_INIT(1, JLOG_MASK_EVERYTHING, JLOG_FIELD_THREAD);
+	jwriter.outputs[0].fp = fp;
+	static struct jlogger jlogger = JLOGGER_STATIC_INIT("foo", JLOG_MASK_EVERYTHING, &jwriter);
+
+	pthread_t pthread;
+	pthread_create(&pthread, NULL, logger_thread, &jlogger);
+
+	jlog(&jlogger, TINFO, NULL, "Logging from parent thread");
+
+	pthread_join(pthread, NULL);
+
+	rewind(fp);
+
+	unsigned long tid1, tid2;
+	fscanf(fp, "0x%lx\n", &tid1);
+	fscanf(fp, "0x%lx\n", &tid2);
+
+	CuAssertTrue(tc, tid1 != tid2);
+	CuAssertTrue(tc, tid1 == pthread_self() || tid2 == pthread_self());
+}
+
 void TestJlogCustomTags(CuTest *tc) {
 	enum {
 		CUSTOM_TAG = 1<<31,
@@ -215,4 +252,27 @@ void TestJlogCustomTags(CuTest *tc) {
 	nread = fread(buf, 1, sizeof(buf), custom);
 	buf[nread] = '\0';
 	CuAssertIntEquals(tc, 1, strcount(buf, "\n"));
+}
+
+void TestJlogContext(CuTest *tc) {
+	FILE *fp = tmpfile();
+
+	static struct jlog_writer jwriter = JLOG_WRITER_STATIC_INIT(1, JLOG_MASK_EVERYTHING, JLOG_FIELD_CONTEXT);
+	jwriter.outputs[0].fp = fp;
+
+	static struct jlogger jlogger_everything = JLOGGER_STATIC_INIT("everything", JLOG_MASK_EVERYTHING, &jwriter);
+	static struct jlogger jlogger_errors = JLOGGER_STATIC_INIT("errors", JLOG_MASK_ERROR, &jwriter);
+
+	jlog(&jlogger_everything, TERROR, NULL, "An error");
+	jlog(&jlogger_everything, TINFO, NULL, "Some information");
+	jlog(&jlogger_errors, TERROR, NULL, "An error");
+	jlog(&jlogger_errors, TINFO, NULL, "Some information"); // should not be logged
+
+	rewind(fp);
+
+	char buf[1024];
+	size_t nread;
+	nread = fread(buf, 1, sizeof(buf), fp);
+	buf[nread] = '\0';
+	CuAssertStrEquals(tc, "everything\neverything\nerrors\n", buf);
 }
