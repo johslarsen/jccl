@@ -47,7 +47,7 @@ enum jlog_field {
 	JLOG_FIELD_MESSAGE =   1<<8,
 
 	JLOG_FIELDS_ALL =      (1<<9)-1,
-	JLOG_FIELDS_MINIMAL =  JLOG_FIELD_TIMESTAMP | JLOG_FIELD_MESSAGE,
+	JLOG_FIELDS_MINIMAL =  JLOG_FIELD_TIMESTAMP | JLOG_FIELD_CONTEXT | JLOG_FIELD_MESSAGE,
 };
 
 enum jlog_timezone {
@@ -56,7 +56,7 @@ enum jlog_timezone {
 };
 
 
-struct jlogger_writer {
+struct jlog_writer_output {
 	FILE *fp;
 	unsigned long mask;
 
@@ -65,19 +65,17 @@ struct jlogger_writer {
 	const char *timestamp_format;
 	const char *separator;
 };
-struct jlogger {
-	const char *context;
-	size_t nwriter;
-	struct jlogger_writer writers[];
+struct jlog_writer {
+	size_t noutput;
+	struct jlog_writer_output outputs[];
 };
-#define JLOG_STATIC_INIT(context, nwriter, mask, timezone, field_mask) {\
-	context,\
+#define JLOG_WRITER_STATIC_INIT(nwriter, mask, field_mask) {\
 	nwriter,\
 	{\
 		[0 ... nwriter-1] = {\
 			NULL,\
 			mask,\
-			timezone,\
+			JLOG_TIMEZONE_UTC,\
 			field_mask,\
 			JLOG_DEFAULT_TIMESTAMP_FORMAT,\
 			JLOG_DEFAULT_SEPARATOR,\
@@ -85,12 +83,28 @@ struct jlogger {
 	}\
 }
 
+struct jlogger {
+	const char *context;
+	unsigned long mask;
+
+	struct jlog_writer *writer;
+};
+#define JLOGGER_STATIC_INIT(context, mask, writer) {\
+	context,\
+	mask,\
+	writer,\
+}
+
 void vjlogprintf(const struct jlogger *logger, enum jlog_tag tag, const char *prefix, const char *filename, size_t linenumber, const char *fmt, ...);
 
 #ifdef JLOG_DISABLE
 #define jlog(logger, tag, prefix, ...) (void)0;
 #else
-#define jlog(logger, tag, prefix, ...) vjlogprintf(logger, tag, prefix, __FILE__, __LINE__, __VA_ARGS__)
+#define jlog(logger, tag, prefix, ...) do {\
+	if (((logger)->mask & tag)) {\
+		vjlogprintf(logger, tag, prefix, __FILE__, __LINE__, __VA_ARGS__);\
+	}\
+} while(0)
 #endif /*JLOG_DISABLE*/
 
 #endif /*JLOG_H*/
