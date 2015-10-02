@@ -579,3 +579,80 @@ void TestModular_exponentiation(CuTest *tc) {
 		CuAssertIntEquals(tc, modular_exponentiation(b[i], e[i], m[i]), ans[i]);
 	}
 }
+
+static unsigned long sum_of_squared_digits(int base, unsigned long n) {
+	unsigned long sum = 0;
+	for (; n > 0; n/=base) {
+		unsigned long least_significant_digit = n%base;
+		sum += least_significant_digit*least_significant_digit;
+	}
+	return sum;
+}
+int is_happy(int base, unsigned long n) {
+	if (base < 2 || n < 1) {
+		return -EDOM;
+	}
+	switch (base) {
+#ifdef JCCL_IS_HAPPY_OPTIMIZED_BASE_2
+		case 2:
+			return 1; // happy base
+#endif /*JCCL_IS_HAPPY_OPTIMIZED_BASE_2*/
+#ifdef JCCL_IS_HAPPY_OPTIMIZED_BASE_10
+		case 10:
+			for (;;) {
+				switch (n) {
+					case 1: return 1;
+					case 4: return 0; // all base 10 non-happy numbers results in the 4, 16, 37, 58, 89, 145, 42, 20, 4, ... cycle
+					default: n = sum_of_squared_digits(base, n);
+				}
+			}
+#endif /*JCCL_IS_HAPPY_OPTIMIZED_BASE_10*/
+		default: {
+			unsigned long halfway = n;
+			for (size_t i=0; ;i++) {
+				if (n == 1) {
+					return 1;
+				}
+
+				n = sum_of_squared_digits(base, n);
+				if ((i%2) == 1) {
+					halfway = sum_of_squared_digits(base, halfway);
+				}
+
+				if (n == halfway) {
+					return 0; // cycle detected
+				}
+			}
+		}
+	}
+}
+static int compare_ul(const void *a, const void *b) {
+	return *(unsigned long *)a - *(unsigned long *)b;
+}
+void TestIs_happy(CuTest *tc) {
+
+	unsigned long happy_numbers_10[] = {  1,   7,  10,  13,  19,  23,  28,  31,  32,  44,
+	                                     49,  68,  70,  79,  82,  86,  91,  94,  97, 100,
+	                                    103, 109, 129, 130, 133, 139, 167, 176, 188, 190,
+	                                    192, 193, 203, 208, 219, 226, 230, 236, 239, 262,
+	                                    263, 280, 291, 293, 301, 302, 310, 313, 319, 320,
+	                                    326, 329, 331, 338, 356, 362, 365, 367, 368, 376,
+	                                    379, 383, 386, 391, 392, 397, 404, 409, 440, 446,
+	                                    464, 469, 478, 487, 490, 496, 536, 556, 563, 565,
+	                                    566, 608, 617, 622, 623, 632, 635, 637, 638, 644,
+	                                    649, 653, 655, 656, 665, 671, 673, 680, 683, 694,
+	                                    700, 709, 716, 736, 739, 748, 761, 763, 784, 790,
+	                                    793, 802, 806, 818, 820, 833, 836, 847, 860, 863,
+	                                    874, 881, 888, 899, 901, 904, 907, 910, 912, 913,
+	                                    921, 923, 931, 932, 937, 940, 946, 964, 970, 973,
+	                                    989, 998, 1000}; // sequence A007770 in OEIS
+
+	for (unsigned long i=1; i<=1000; i++) {
+		int should_be_happy = NULL != bsearch(&i, happy_numbers_10, sizeof(happy_numbers_10)/sizeof(*happy_numbers_10), sizeof(*happy_numbers_10), compare_ul);
+		CuAssertIntEquals(tc, should_be_happy, is_happy(10, i));
+	}
+
+	CuAssertIntEquals(tc, -EDOM, is_happy(10, 0));
+	CuAssertIntEquals(tc, -EDOM, is_happy(0, 1));
+	CuAssertIntEquals(tc, -EDOM, is_happy(1, 1));
+}

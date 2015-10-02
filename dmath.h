@@ -162,4 +162,18 @@ extern int basestring_from_long(char *basestring, int base, long unsigned int n)
  */
 extern unsigned int modular_exponentiation(unsigned int b, unsigned int e, unsigned m);
 
+
+/*
+ * check if n is a happy number
+ *
+ * happy numbers := {n_0 | n_0 \in Z, 0<n_0, \exists_{i} n_i = 1, n_i := \sum_{d \in digits(n_{i-1})} d^2}
+ *
+ * returns:
+ *   base < 2 --> -EDOM
+ *   n < 1 --> -EDOM
+ *   --> happy ? 1 : 0
+ */
+extern int is_happy(int base, unsigned long n);
+
+
 #endif /* DMATH_H */
