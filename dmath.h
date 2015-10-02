@@ -8,18 +8,22 @@
  * the fibonacci sequence is a well known sequence of integers. see
  * http://en.wikipedia.org/wiki/Fibonacci_number for more information.
  *
+ * F_i := F_{i-1} + F_{i-2}, F_0=0,F_1=1
+ *
  * returns:
  *   n < 0  --> -EDOM
  *   n > 92 --> -ERANGE (causes overflow on 64-bit) -->
  *
- *   n-th fibonacci number (0, 1, 1, 3, ...)
+ *   --> n-th fibonacci number (0, 1, 1, 3, ...)
  */
 extern unsigned long fibonacci(int n);
 
 
 /*
- * greatest common divisor is the greatest integer which divides both a and b
+ * greatest common divisor is the greatest integer that divides both a and b
  * without a remainder.
+ *
+ * gcd(a,b) := max({n \in Z : n|a,n|b})
  *
  * returns:
  *   a == 0 || b == 0 --> -EDOM
@@ -29,8 +33,10 @@ extern long gcd(long a, long b);
 
 
 /*
- * least common multiple is the smallest positive integer which is divisable by
- * both a and b without a remainder.
+ * least common multiple is the smallest positive integer that both a and b
+ * divides without a remainder
+ *
+ * lcm(a,b) := min({n \in Z : a|n,b|n})
  *
  * returns:
  *   a == 0 || b == 0 --> -EDOM
@@ -92,6 +98,9 @@ extern int chinese_remainder(const long *a, const long *m, int neq);
 /*
  * check if n is a prime number
  *
+ * composite numbers := {a*b | a,b \in Z, 0<a,b}
+ * prime numbers := Z - composite numbers
+ *
  * returns:
  *   --> prime ? 1 : 0;
  */
@@ -102,6 +111,7 @@ extern int isprime_cached(unsigned int n);
 
 /*
  * integer operations to find the floor value of the base logaritm of n.
+ *
  * returns:
  *   base < 2 --> -EDOM
  *   n == 0 --> -EDOM
@@ -158,7 +168,7 @@ extern int basestring_from_long(char *basestring, int base, long unsigned int n)
  *
  * returns:
  *   m < 1 --> -EDOM
- *   --> b^e % m 
+ *   --> b^e % m
  */
 extern unsigned int modular_exponentiation(unsigned int b, unsigned int e, unsigned m);
 
