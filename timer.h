@@ -8,6 +8,7 @@
 #endif /*TIMED_BLOCK_CLOCK*/
 
 #ifndef TIMED_BLOCK_ACTION
+#include <stdio.h>
 #define TIMED_BLOCK_ACTION(description, mean_duration) printf("%s %g\n", (description), (mean_duration))
 #endif /*TIMED_BLOCK_ACTION*/
 
