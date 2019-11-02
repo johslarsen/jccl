@@ -45,7 +45,7 @@ int table_free(Table *table) {
 	}
 
 	if (table->entries != NULL) {
-		for (int i = 0; i < table->size; i++) {
+		for (unsigned i = 0; i < table->size; i++) {
 			// remove each node in the i-th hash chain
 			for (Table_node *nnp, *np = table->entries[i]; np != NULL; np = nnp) { // next - / node pointer
 				nnp = np->next;

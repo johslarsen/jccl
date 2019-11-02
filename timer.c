@@ -15,11 +15,14 @@ void TestTIMED_BLOCK(CuTest *tc) {
 #define DESCRIPTION_INNER "usleep(10000)"
 	jw.outputs[0].fp = tmpfile();
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wshadow"
 	TIMED_BLOCK(2, DESCRIPTION_OUTER) { // nested TIMED_BLOCKs works, but makes little sense with outer niteration != 1
 		TIMED_BLOCK(5, DESCRIPTION_INNER) {
 			usleep(10000);
 		}
 	}
+#pragma GCC diagnostic pop
 
 	rewind(jw.outputs[0].fp);
 

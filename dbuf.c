@@ -29,13 +29,13 @@ void dbuf_destroy(struct dbuf *buf) {
 }
 void TestDbufInitAndDestroy(CuTest *tc) {
 	struct dbuf sbuf = DBUF_STATIC_INIT(TEST_NINITIAL);
-	static struct dbuf rbuf;
+	struct dbuf rbuf;
 
 	dbuf_init(&rbuf, TEST_NINITIAL);
 
-	for (int i = 0; i < sizeof(sbuf); i++) {
-		CuAssertIntEquals(tc, *(((char *)&sbuf)+i), *(((char *)&rbuf)+i));
-	}
+	CuAssertPtrEquals(tc, sbuf.b, rbuf.b);
+	CuAssertIntEquals(tc, sbuf.n, rbuf.n);
+	CuAssertIntEquals(tc, sbuf.top, rbuf.top);
 
 	dbuf_init(&rbuf, 1337);
 	CuAssertIntEquals(tc, 1337, rbuf.n);

@@ -78,7 +78,7 @@ void bsort_partial(void *base, size_t nmemb, size_t size, bsort_categorizer cate
 		assert(bucket < nbucket);
 
 		void *slot = p;
-		for (int i = nbucket-1; i > bucket; i--) {
+		for (size_t i = nbucket-1; i > bucket; i--) {
 			if (slot != buckets[i]) {
 				swap(buckets[i], slot, size);
 				slot = buckets[i];
@@ -100,13 +100,13 @@ inline static void *bsort_first_unsorted_element(void *base, size_t nmemb, size_
 		if (bucket < last_bucket) {
 			break; // i.e. from here on out base is unsorted
 		} else if (bucket > last_bucket) {
-			for (int i = last_bucket+1; i <= bucket; i++) {
+			for (size_t i = last_bucket+1; i <= bucket; i++) {
 				buckets[i] = p;
 			}
 			last_bucket = bucket;
 		}
 	}
-	for (int i = last_bucket+1; i < nbucket; i++) {
+	for (size_t i = last_bucket+1; i < nbucket; i++) {
 		buckets[i] = p;
 	}
 

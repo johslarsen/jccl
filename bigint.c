@@ -35,8 +35,8 @@ enum pad_chunks {
 	PAD_CHUNK_POSITIVE = 0,
 	PAD_CHUNK_NEGATIVE = ULONG_MAX,
 };
-const unsigned long pad_chunks[] = {PAD_CHUNK_POSITIVE, PAD_CHUNK_NEGATIVE}; // indexed by MSB
-const struct bigint bigint_one = {.nchunk = 1, .pad_chunk = PAD_CHUNK_POSITIVE, .chunks = {1} };
+static const unsigned long pad_chunks[] = {PAD_CHUNK_POSITIVE, PAD_CHUNK_NEGATIVE}; // indexed by MSB
+static const struct bigint bigint_one = {.nchunk = 1, .pad_chunk = PAD_CHUNK_POSITIVE, .chunks = {1} };
 
 
 static struct bigint *bigint_init(int nchunk) {
@@ -62,9 +62,9 @@ void TestBigint_init(CuTest *tc) {
 }
 
 
-static inline unsigned long bigint_index_with_padding(const struct bigint *n, unsigned int i) {
+static inline unsigned long bigint_index_with_padding(const struct bigint *n, int i) {
 	assert(n != NULL);
-	return i < n->nchunk ? n->chunks[i] : n->pad_chunk;
+	return i >= 0 && i < n->nchunk ? n->chunks[i] : n->pad_chunk;
 }
 void TestBigint_index_with_padding(CuTest *tc) {
 	struct bigint *positive = bigint_from_long(pad_chunks[0]);
@@ -184,6 +184,8 @@ void TestBigint_identify_pad_chunk_and_trim(CuTest *tc) {
 	CuAssertPtrNotNull(tc, trimable_positive);
 	struct bigint *trimable_negative = bigint_init(2);
 	CuAssertPtrNotNull(tc, trimable_negative);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wnull-dereference"
 
 	untrimable_positive->chunks[0] = pad_chunks[1];
 	untrimable_positive->chunks[1] = pad_chunks[0]+1;
@@ -213,6 +215,7 @@ void TestBigint_identify_pad_chunk_and_trim(CuTest *tc) {
 	bigint_destroy(untrimable_negative);
 	bigint_destroy(trimable_positive);
 	bigint_destroy(trimable_negative);
+#pragma GCC diagnostic pop
 }
 
 
@@ -253,7 +256,7 @@ void TestBigint_to_long(CuTest *tc) {
 	struct bigint *n = bigint_from_long(a_number);
 	CuAssertPtrNotNull(tc, n);
 
-	unsigned long result;
+	unsigned long result = 0;
 	CuAssertIntEquals(tc, 0, bigint_to_long(n, &result));
 	CuAssertIntEquals(tc, a_number, result);
 
@@ -283,7 +286,7 @@ struct bigint *bigint_from_msb_first_hexstring(const char *s, size_t ns) {
 	}
 
 	unsigned long nibble;
-	for (int i = 0; i < ns; i++) {
+	for (size_t i = 0; i < ns; i++) {
 		char *hexchar = strchr(bigint_hex_charset, s[ns-1-i]);
 		if (hexchar == NULL) {
 			goto error;

@@ -130,7 +130,7 @@ extern int dmath_ilog2(long unsigned int n);
  *   n == 0 --> 0
  *   --> base^a == n
  */
-extern int is_power_of(int base, unsigned long n);
+extern int is_power_of(unsigned int base, unsigned long n);
 /* more efficient version when base == 2 */
 extern int is_power_of_2(unsigned long n);
 

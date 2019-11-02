@@ -44,7 +44,7 @@ void TestFibonacci(CuTest *tc) {
 		NFIBONACCI = 94,
 	};
 
-	CuAssertTrue(tc, fibonacci(-1) == -EDOM);
+	CuAssertTrue(tc, fibonacci(-1) == (unsigned long)-EDOM);
 
 	const unsigned long fibonacci_answer[NFIBONACCI] = {
 		0, 1, 1, 2, 3, 5, 8, 13, 21, 34,
@@ -290,7 +290,7 @@ int isprime_cached(unsigned int n) {
 	}
 
 	static unsigned int primes[NPRIME];
-	static int nprime = 0;
+	static unsigned int nprime = 0;
 
 	if (nprime == 0) {
 		primes[nprime++] = 2;
@@ -350,7 +350,7 @@ int is_power_of_2(unsigned long n) {
 }
 
 
-int is_power_of(int base, unsigned long n) {
+int is_power_of(unsigned int base, unsigned long n) {
 	if (base < 2) {
 		return 0; // undefined
 	}
@@ -503,7 +503,7 @@ void TestLogBasestring_from_log(CuTest *tc) {
 	int dmath_ilog2_ans[NELEM] =    {-EDOM, 4,  6,   7,   31,       63};
 	int base[NELEM] =               {3,     3,  5,   7,   11,       36};
 	int dmath_ilogb_ans[NELEM] =    {-EDOM, 2,  3,   2,   9,        12};
-	char *base_2_string[NELEM] = {
+	const char *base_2_string[NELEM] = {
 		"0",
 		"10000",
 		"1111111",
@@ -511,7 +511,7 @@ void TestLogBasestring_from_log(CuTest *tc) {
 		"11111111111111111111111111111111",
 		"1111111111111111111111111111111111111111111111111111111111111111",
 	};
-	char *base_b_string[NELEM] = {
+	const char *base_b_string[NELEM] = {
 		"0",
 		"121",
 		"1002",

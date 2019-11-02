@@ -214,6 +214,7 @@ void TestListErroneousInput(CuTest *tc) {
 	CuAssertPtrEquals(tc, NULL, list_shift(NULL));
 	CuAssertPtrEquals(tc, NULL, list_pop(NULL));
 	list_free(NULL);
+	list_free(list);
 }
 
 

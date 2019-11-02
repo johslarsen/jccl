@@ -20,7 +20,7 @@ struct dict {
 	dict_comparator compar;
 };
 
-struct subtree end_of_tree_sentinel = {.left = &end_of_tree_sentinel, .right = &end_of_tree_sentinel};
+static struct subtree end_of_tree_sentinel = {.left = &end_of_tree_sentinel, .right = &end_of_tree_sentinel};
 #define EOT(node) ((struct subtree *)(node) == (&end_of_tree_sentinel))
 
 
@@ -62,12 +62,15 @@ void TestNodeConstructionAndDestruction(CuTest *tc) {
 
 	struct subtree *node = node_init(&key, &value);
 	CuAssertPtrNotNull(tc, node);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wnull-dereference"
 	CuAssertPtrEquals(tc, &key, (int *)node->key);
 	CuAssertPtrEquals(tc, &value, (int *)node->value);
 	CuAssertIntEquals(tc, 1, node->nnode);
 	CuAssertIntEquals(tc, 1, node->level);
 	CuAssertTrue(tc, EOT(node->left));
 	CuAssertTrue(tc, EOT(node->right));
+#pragma GCC diagnostic pop
 
 	node_destroy(node);
 }
@@ -431,7 +434,7 @@ void TestDict_put(CuTest *tc) {
 	int i;
 	for (i = 1; i <= 7; i++) {
 		unsigned long wannabe_pointer = i;
-		void *nkey, *nvalue;
+		void *nkey = (void*)42, *nvalue = (void*)42;
 		CuAssertIntEquals(tc, 0, dict_put(dict, (void *)wannabe_pointer, (void *)0x1337, &nkey, &nvalue));
 		CuAssertIntEquals(tc, i, dict_size(dict));
 		CuAssertPtrEquals(tc, NULL, nkey);
@@ -492,23 +495,23 @@ void TestDict_get(CuTest *tc) {
 	struct dict *dict = dict_init(compare_pointers);
 	CuAssertPtrNotNull(tc, dict);
 
-	int index;
+	int index = 42;
 	CuAssertPtrEquals(tc, NULL, dict_get(dict, (void *)0xdeadbeef, &index));
 	CuAssertPtrEquals(tc, NULL, dict_get(dict, (void *)0xdeadbeef, NULL));
 
 	int i;
 	for (i = 0; i < 7; i++) {
-		unsigned long key = i+1;
-		CuAssertPtrEquals(tc, NULL, dict_get(dict, (void *)key, &index));
-		CuAssertPtrEquals(tc, NULL, dict_get(dict, (void *)key, NULL));
+		unsigned long set_key = i+1;
+		CuAssertPtrEquals(tc, NULL, dict_get(dict, (void *)set_key, &index));
+		CuAssertPtrEquals(tc, NULL, dict_get(dict, (void *)set_key, NULL));
 
-		CuAssertIntEquals(tc, 0, dict_put(dict, (void *)key, (void *)key, NULL, NULL));
+		CuAssertIntEquals(tc, 0, dict_put(dict, (void *)set_key, (void *)set_key, NULL, NULL));
 
 		int j;
 		for (j = 0; j < i; j++) {
-		unsigned long key = j+1;
-			CuAssertPtrEquals(tc, (void *)key, dict_get(dict, (void *)key, NULL));
-			CuAssertPtrEquals(tc, (void *)key, dict_get(dict, (void *)key, &index));
+			unsigned long get_key = j+1;
+			CuAssertPtrEquals(tc, (void *)get_key, dict_get(dict, (void *)get_key, NULL));
+			CuAssertPtrEquals(tc, (void *)get_key, dict_get(dict, (void *)get_key, &index));
 			CuAssertIntEquals(tc, j, index);
 		}
 	}
@@ -532,7 +535,7 @@ void TestDict_get(CuTest *tc) {
 extern int dict_remove(struct dict *dict, void const *key, void **nkey, void **nvalue);
 
 
-static int subtree_select(struct subtree *head, dict_comparator compar, int i, void **key, void **value) {
+static int subtree_select(struct subtree *head, int i, void **key, void **value) {
 	assert(key != NULL && value != NULL);
 
 	if (i < 0) {
@@ -565,40 +568,40 @@ int dict_select(struct dict *dict, int i, void **key, void **value) {
 		return EINVAL;
 	}
 
-	return subtree_select(dict->head, dict->compar, i, key, value);
+	return subtree_select(dict->head, i, key, value);
 }
 void TestDict_select(CuTest *tc) {
 	struct dict *dict = dict_init(compare_pointers);
 	CuAssertPtrNotNull(tc, dict);
 
-	void *rkey, *rvalue;
+	void *rkey = (void*)42, *rvalue = (void*)42;
 	CuAssertIntEquals(tc, ESRCH, dict_select(dict, 0, &rkey, &rvalue));
 
 	int i;
 	for (i = 0; i < 7; i++) {
-		unsigned long key = i+1;
-		unsigned long value = key + 1000;
+		unsigned long set_key = i+1;
+		unsigned long set_value = set_key + 1000;
 		CuAssertIntEquals(tc, ESRCH, dict_select(dict, i, &rkey, &rvalue));
 		CuAssertIntEquals(tc, ESRCH, dict_select(dict, -i-1, &rkey, &rvalue));
 
-		CuAssertIntEquals(tc, 0, dict_put(dict, (void *)key, (void *)value, NULL, NULL));
+		CuAssertIntEquals(tc, 0, dict_put(dict, (void *)set_key, (void *)set_value, NULL, NULL));
 
 		CuAssertIntEquals(tc, 0, dict_select(dict, i, &rkey, &rvalue));
-		CuAssertPtrEquals(tc, (void *)key, rkey);
-		CuAssertPtrEquals(tc, (void *)value, rvalue);
+		CuAssertPtrEquals(tc, (void *)set_key, rkey);
+		CuAssertPtrEquals(tc, (void *)set_value, rvalue);
 
 		int j;
 		for (j = 0; j < i; j++) {
-			unsigned long key = j+1;
-			unsigned long value = key + 1000;
+			unsigned long get_key = j+1;
+			unsigned long get_value = get_key + 1000;
 
 			CuAssertIntEquals(tc, 0, dict_select(dict, j, &rkey, &rvalue));
-			CuAssertPtrEquals(tc, (void *)key, rkey);
-			CuAssertPtrEquals(tc, (void *)value, rvalue);
+			CuAssertPtrEquals(tc, (void *)get_key, rkey);
+			CuAssertPtrEquals(tc, (void *)get_value, rvalue);
 
 			CuAssertIntEquals(tc, 0, dict_select(dict, -i-1+j, &rkey, &rvalue));
-			CuAssertPtrEquals(tc, (void *)key, rkey);
-			CuAssertPtrEquals(tc, (void *)value, rvalue);
+			CuAssertPtrEquals(tc, (void *)get_key, rkey);
+			CuAssertPtrEquals(tc, (void *)get_value, rvalue);
 		}
 	}
 
@@ -650,23 +653,23 @@ void TestDict_for_each(CuTest *tc) {
 
 	int i;
 	for (i = 0; i < NNODE_3_LAYER_BALANCED_TREE; i++) {
-		unsigned long key = i+1;
-		unsigned long value = key+1000;
+		unsigned long set_key = i+1;
+		unsigned long set_value = set_key+1000;
 
-		CuAssertIntEquals(tc, 0, dict_put(dict, (void *)key, (void *)value, NULL, NULL));
+		CuAssertIntEquals(tc, 0, dict_put(dict, (void *)set_key, (void *)set_value, NULL, NULL));
 
-		struct dict_action_dump_state state;
+		struct dict_action_dump_state state = {};
 		state.n = 0;
 		dict_for_each(dict, dict_action_dump, &state);
 		CuAssertIntEquals(tc, i+1, state.n);
 
 		int j;
 		for (j = 0; j < i; j++) {
-			unsigned long key = j+1;
-			unsigned long value = key+1000;
+			unsigned long get_key = j+1;
+			unsigned long get_value = get_key+1000;
 
-			CuAssertPtrEquals(tc, (void *)key, state.keys[j]);
-			CuAssertPtrEquals(tc, (void *)value, state.values[j]);
+			CuAssertPtrEquals(tc, (void *)get_key, state.keys[j]);
+			CuAssertPtrEquals(tc, (void *)get_value, state.values[j]);
 		}
 	}
 }
@@ -680,6 +683,7 @@ static int dict_action_abort_after(void const *key, void const *value, void *sta
 	struct dict_action_abort_after_state *known_state = (struct dict_action_abort_after_state *)state;
 	known_state->ncall++;
 	return known_state->ncall >= known_state->abort_after ? known_state->abort_after : 0;
+	(void)(key), (void)(value);
 }
 
 void TestDict_for_eachWithAbortion(CuTest *tc) {

@@ -22,7 +22,10 @@ static inline void write_timestamp(const struct jlog_writer_output *output, cons
 		assert("unknown timezone" == NULL);
 		break;
 	}
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-nonliteral"
 	strftime(timestamp, sizeof(timestamp), format, &tm);
+#pragma GCC diagnostic pop
 
 	fprintf(output->fp, "%s", timestamp);
 }
@@ -32,7 +35,7 @@ static inline const char *extract_convert_parameter(char *buf, size_t nbuf, cons
 	assert(eof != NULL);
 
 	size_t nf = eof-sof;
-	assert(nf < sizeof(buf));
+	assert(nf < nbuf);
 	strncpy(buf, sof, nf);
 	buf[nf] = '\0';
 
@@ -40,15 +43,16 @@ static inline const char *extract_convert_parameter(char *buf, size_t nbuf, cons
 }
 
 void vjlogprintf(const struct jlogger *logger, enum jlog_tag tag, const char *function, const char *filename, size_t linenumber, const char *fmt, ...) {
-	va_list original_args;
-	va_start(original_args, fmt);
 	if (logger->writer == NULL) {
 		return;
 	}
 
+	va_list original_args;
+	va_start(original_args, fmt);
+
 	pthread_mutex_lock(&logger->writer->mutex);
 
-	for (int i = 0; i < logger->writer->noutput; i++) {
+	for (size_t i = 0; i < logger->writer->noutput; i++) {
 		const struct jlog_writer_output *output = &logger->writer->outputs[i];
 		if ((output->mask & tag) == 0 || output->fp == NULL) {
 			continue;
@@ -61,7 +65,7 @@ void vjlogprintf(const struct jlogger *logger, enum jlog_tag tag, const char *fu
 				convert = false;
 
 				switch(c) {
-					case '%': fputc('%', output->fp);
+					case '%': fputc('%', output->fp); break;
 					case 'c': fprintf(output->fp, "%s", logger->category!=NULL?logger->category:""); break;
 					case 'd':
 						if (*(p+1) == '{') {
@@ -78,11 +82,15 @@ void vjlogprintf(const struct jlogger *logger, enum jlog_tag tag, const char *fu
 					case 'm': {
 						va_list args;
 						va_copy(args, original_args);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-nonliteral"
 						vfprintf(output->fp, fmt, args);
+#pragma GCC diagnostic pop
+						va_end(args);
 						break;
 					}
 					case 'M': fprintf(output->fp, "%s", function); break;
-					case 'n': fputc('\n', output->fp);
+					case 'n': fputc('\n', output->fp); break;
 					case 'p': fprintf(output->fp, "0x%x", tag); break;
 					case 'r': fprintf(output->fp, "%lu", clock() / (CLOCKS_PER_SEC/1000)); break;
 					case 't': fprintf(output->fp, "0x%lx", pthread_self()); break;
@@ -116,12 +124,14 @@ void vjlogprintf(const struct jlogger *logger, enum jlog_tag tag, const char *fu
 void TestJlogNoSegfaultOnInitilizedLoggerWithoutWriters(CuTest *tc) {
 	static struct jlogger jlogger = JLOGGER_STATIC_INIT("foo", JLOG_MASK_EVERYTHING, NULL);
 	jlog(&jlogger, TWARN, "Where do I get printed?");
+	CuAssertPtrNotNull(tc, "passed by getting here");
 }
 
 void TestJlogNoSegfaultOnInitializedStructure(CuTest *tc) {
 	static struct jlog_writer jwriter = JLOG_WRITER_STATIC_INIT(1, JLOG_MASK_EVERYTHING, JLOG_FORMAT_EXTENSIVE);
 	static struct jlogger jlogger = JLOGGER_STATIC_INIT("foo", JLOG_MASK_EVERYTHING, &jwriter);
 	jlog(&jlogger, TWARN, "Where do I get printed?");
+	CuAssertPtrNotNull(tc, "passed by getting here");
 }
 void TestJlogMessageAndCategoryExistInDefaultFormats(CuTest *tc) {
 #define MSG "Some message"

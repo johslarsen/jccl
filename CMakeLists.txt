@@ -11,10 +11,10 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 add_definitions(-DCMAKE_EXPORT_COMPILE_COMMANDS=ON)
 
 add_definitions(-Wall -fno-omit-frame-pointer
-  -Wextra -pedantic
+  -Wextra -Wshadow
   -Wnull-dereference -Wformat=2 -Wwrite-strings
-  -Wswitch-default -Wduplicated-branches -Wduplicated-cond
-  -Wfloat-equal -Winline -fstack-protector
+  -Wswitch-default -Wfloat-equal -Winline -fstack-protector
+  -UNDEBUG
 )
 
 enable_testing()
